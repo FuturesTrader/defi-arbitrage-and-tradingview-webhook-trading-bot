@@ -1,0 +1,42 @@
+{
+  "id": "traderjoe-to-uniswap_1741967014390",
+  "timestamp": 1741967020,
+  "direction": "traderjoe-to-uniswap",
+  "config": {
+    "startDex": "traderjoe",
+    "endDex": "uniswap",
+    "inputAmount": "4.768616",
+    "testMode": true,
+    "firstLeg": {
+      "formattedPrice": "0.0521923",
+      "expectedOutput": "0.248885150483559684",
+      "poolAddress": "0x864d4e5Ee7318e97483DB7EB0912E09F161516EA",
+      "fee": 0.046114,
+      "priceImpact": 0,
+      "minAmountOut": "0.237033476651009222",
+      "routerAddress": "0x18556DA13313f3532c54711497A8FedAC273220E"
+    },
+    "secondLeg": {
+      "formattedPrice": "19.1341",
+      "expectedOutput": "4.762186",
+      "poolAddress": "0xfAe3f424a0a47706811521E3ee268f00cFb5c45E",
+      "fee": 500,
+      "priceImpact": 0.05005,
+      "minAmountOut": "4.535415",
+      "routerAddress": "0xbb00FF08d01D300023C629E8fFfFcb65A5a578cE"
+    }
+  },
+  "result": {
+    "success": true,
+    "error": "",
+    "errorType": "",
+    "firstLegHash": "0xf61d30a29d0e31fe847a3275f2f8a7b3386a4099f1741595c3e55ea7786d4019",
+    "expectedOutput": "4.762186",
+    "amountOut": "0.249475934573639869",
+    "profit": "-0.00643",
+    "finalBalance": "264.883305",
+    "gasUsed": "316919",
+    "effectiveGasPrice": "3.096687453",
+    "totalCycleTime": 4
+  }
+}

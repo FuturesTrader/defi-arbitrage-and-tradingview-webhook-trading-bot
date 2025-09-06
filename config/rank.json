@@ -1,0 +1,16 @@
+{
+    "network_costs": {
+        "arbitrum": 250,
+        "avalanche": 100,
+        "polygon": 200,
+        "base": 100
+    },
+    "network_speeds": {
+        "arbitrum": 100,
+        "avalanche": 300,
+        "polygon": 200,
+        "base": 300
+    },
+    "PRICE_DIFFERENCE_THRESHOLD": 0.05
+}
+

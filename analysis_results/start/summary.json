@@ -1,0 +1,183 @@
+{
+  "totalTransactions": 6,
+  "successCount": 6,
+  "failureCount": 0,
+  "successRate": 1,
+  "testModeCount": 6,
+  "routeDistribution": {
+    "uniswap-to-traderjoe": 3,
+    "traderjoe-to-uniswap": 3,
+    "unknown": 0
+  },
+  "dexAccuracy": {
+    "uniswap": {
+      "firstLeg": {
+        "count": 3,
+        "average": -100,
+        "median": -100,
+        "stdDev": 0,
+        "min": -100,
+        "max": -100,
+        "data": [
+          -100,
+          -100,
+          -100
+        ],
+        "adjustmentFactor": 0.15,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 3,
+        "average": -99.99480515694627,
+        "median": -99.99474169711942,
+        "stdDev": 0.0001230184890876639,
+        "min": -99.99497717214322,
+        "max": -99.99469660157622,
+        "data": [
+          -99.99474169711942,
+          -99.99469660157622,
+          -99.99497717214322
+        ],
+        "adjustmentFactor": 0.15,
+        "confidence": "low"
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "count": 3,
+        "average": -100,
+        "median": -100,
+        "stdDev": 0,
+        "min": -100,
+        "max": -100,
+        "data": [
+          -100,
+          -100,
+          -100
+        ],
+        "adjustmentFactor": 0.15,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 3,
+        "average": -99.99496673019551,
+        "median": -99.99511884105551,
+        "stdDev": 0.000223849884616072,
+        "min": -99.99513111159914,
+        "max": -99.99465023793188,
+        "data": [
+          -99.99511884105551,
+          -99.99465023793188,
+          -99.99513111159914
+        ],
+        "adjustmentFactor": 0.15,
+        "confidence": "low"
+      }
+    }
+  },
+  "profitMetrics": {
+    "USDC": {
+      "totalProfit": "-0.006041",
+      "averageProfit": "-0.001006",
+      "medianProfit": "-0.000882",
+      "profitPredictionAccuracy": -1.000419615338688e-7,
+      "profitableTradeCount": 0,
+      "unprofitableTradeCount": 6
+    }
+  },
+  "suggestedAdjustmentFactors": {
+    "uniswap": {
+      "firstLeg": {
+        "factor": 0.15,
+        "confidence": "low",
+        "sampleSize": 3
+      },
+      "secondLeg": {
+        "factor": 0.15,
+        "confidence": "low",
+        "sampleSize": 3
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "factor": 0.15,
+        "confidence": "low",
+        "sampleSize": 3
+      },
+      "secondLeg": {
+        "factor": 0.15,
+        "confidence": "low",
+        "sampleSize": 3
+      }
+    }
+  },
+  "scenarioAnalysis": {
+    "byTradeSize": {
+      "small": {
+        "count": 3,
+        "accuracyUniFirst": -100,
+        "accuracyJoeFirst": -100,
+        "accuracyUniSecond": -99.99471914934782,
+        "accuracyJoeSecond": -99.99465023793188
+      },
+      "medium": {
+        "count": 3,
+        "accuracyUniFirst": -100,
+        "accuracyJoeFirst": -100,
+        "accuracyUniSecond": -99.99497717214322,
+        "accuracyJoeSecond": -99.99512497632733
+      },
+      "large": {
+        "count": 0,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      }
+    },
+    "byProfitability": {
+      "profitable": {
+        "count": 0,
+        "avgAccuracy": 0,
+        "adjustmentFactors": {
+          "uniswapFirst": 1,
+          "uniswapSecond": 1,
+          "traderjoeFirst": 1,
+          "traderjoeSecond": 1
+        }
+      },
+      "unprofitable": {
+        "count": 6,
+        "avgAccuracy": -99.99659062904726,
+        "adjustmentFactors": {
+          "uniswapFirst": 0.15,
+          "uniswapSecond": 0.15,
+          "traderjoeFirst": 0.15,
+          "traderjoeSecond": 0.15
+        }
+      }
+    }
+  },
+  "temporalAnalysis": {
+    "accuracyTrend": [
+      {
+        "timeRange": "2025-03-15T18:00",
+        "count": 6,
+        "averageAccuracy": -99.99659062904726
+      }
+    ],
+    "adjustmentFactorTrend": [
+      {
+        "timeRange": "2025-03-15T18:00",
+        "uniswapFirstLeg": 0.15,
+        "uniswapSecondLeg": 0.15,
+        "traderjoeFirstLeg": 0.15,
+        "traderjoeSecondLeg": 0.15
+      }
+    ]
+  },
+  "timeRange": {
+    "first": "2025-03-15T18:34:23.000Z",
+    "last": "2025-03-15T18:35:59.000Z"
+  }
+}

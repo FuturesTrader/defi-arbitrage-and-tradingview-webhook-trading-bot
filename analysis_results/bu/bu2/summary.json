@@ -1,0 +1,259 @@
+{
+  "totalTransactions": 56,
+  "successCount": 56,
+  "failureCount": 0,
+  "successRate": 1,
+  "testModeCount": 56,
+  "routeDistribution": {
+    "uniswap-to-traderjoe": 28,
+    "traderjoe-to-uniswap": 28,
+    "unknown": 0
+  },
+  "dexAccuracy": {
+    "uniswap": {
+      "firstLeg": {
+        "count": 17,
+        "average": 0.013512852951341898,
+        "median": 0.013363359291537221,
+        "stdDev": 0.0007752805107200875,
+        "min": 0.012634071858857239,
+        "max": 0.015077537269098069,
+        "data": [
+          0.014499780311241595,
+          0.013791931319475339,
+          0.014634823276880185,
+          0.015077537269098069,
+          0.013934765397426718,
+          0.014671473322441151,
+          0.013289233849417314,
+          0.012727133218409242,
+          0.012672460125299443,
+          0.013363359291537221,
+          0.012737494713085459,
+          0.012907968008612084,
+          0.012855391982933593,
+          0.013460379914640906,
+          0.012907297368692474,
+          0.012634071858857239,
+          0.01355339894476424
+        ],
+        "adjustmentFactor": 1.0001,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 18,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "count": 17,
+        "average": 0.013510826819204555,
+        "median": 0.013205796287912202,
+        "stdDev": 0.0009627759161410226,
+        "min": 0.012309194360452153,
+        "max": 0.015143651484307769,
+        "data": [
+          0.01509710743617372,
+          0.013861950724313945,
+          0.014083462425002835,
+          0.014920363125918247,
+          0.015143651484307769,
+          0.015035303514706439,
+          0.012455695565872857,
+          0.012935898850999049,
+          0.01283412262456661,
+          0.012427824731563663,
+          0.013295664039867183,
+          0.013008067478705308,
+          0.01337730985402145,
+          0.012876815518087607,
+          0.012309194360452153,
+          0.012815827904006353,
+          0.013205796287912202
+        ],
+        "adjustmentFactor": 1.0001,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 24,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    }
+  },
+  "profitMetrics": {
+    "USDC": {
+      "totalProfit": "-0.759184",
+      "averageProfit": "-0.013556",
+      "medianProfit": "-0.014563",
+      "profitPredictionAccuracy": 100.00000000000013,
+      "profitableTradeCount": 1,
+      "unprofitableTradeCount": 55
+    }
+  },
+  "suggestedAdjustmentFactors": {
+    "uniswap": {
+      "firstLeg": {
+        "factor": 1.0001,
+        "confidence": "low",
+        "sampleSize": 17
+      },
+      "secondLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 18
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "factor": 1.0001,
+        "confidence": "low",
+        "sampleSize": 17
+      },
+      "secondLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 24
+      }
+    }
+  },
+  "scenarioAnalysis": {
+    "byTradeSize": {
+      "small": {
+        "count": 3,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      },
+      "medium": {
+        "count": 3,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      },
+      "large": {
+        "count": 50,
+        "accuracyUniFirst": 0.01623803944567216,
+        "accuracyJoeFirst": 0.01618715305492998,
+        "accuracyUniSecond": -0.0029596745833003384,
+        "accuracyJoeSecond": -9.70610201118199e-16
+      }
+    },
+    "byProfitability": {
+      "profitable": {
+        "count": 1,
+        "avgAccuracy": 0.018432378125305248,
+        "adjustmentFactors": {
+          "uniswapFirst": 1.0005,
+          "uniswapSecond": 1,
+          "traderjoeFirst": 1,
+          "traderjoeSecond": 1
+        }
+      },
+      "unprofitable": {
+        "count": 55,
+        "avgAccuracy": 0.0036809027210549837,
+        "adjustmentFactors": {
+          "uniswapFirst": 1.0001,
+          "uniswapSecond": 1,
+          "traderjoeFirst": 1.0001,
+          "traderjoeSecond": 1
+        }
+      }
+    }
+  },
+  "temporalAnalysis": {
+    "accuracyTrend": [
+      {
+        "timeRange": "2025-03-15T18:00",
+        "count": 45,
+        "averageAccuracy": 0.0026297586807488816
+      },
+      {
+        "timeRange": "2025-03-15T19:00",
+        "count": 11,
+        "averageAccuracy": 0.009322080649966334
+      }
+    ],
+    "adjustmentFactorTrend": [
+      {
+        "timeRange": "2025-03-15T18:00",
+        "uniswapFirstLeg": 1.0001,
+        "uniswapSecondLeg": 1,
+        "traderjoeFirstLeg": 1.0001,
+        "traderjoeSecondLeg": 1
+      },
+      {
+        "timeRange": "2025-03-15T19:00",
+        "uniswapFirstLeg": 1.0003,
+        "uniswapSecondLeg": 0.9999,
+        "traderjoeFirstLeg": 1.0003,
+        "traderjoeSecondLeg": 1
+      }
+    ]
+  },
+  "timeRange": {
+    "first": "2025-03-15T18:34:23.000Z",
+    "last": "2025-03-15T19:02:53.000Z"
+  }
+}

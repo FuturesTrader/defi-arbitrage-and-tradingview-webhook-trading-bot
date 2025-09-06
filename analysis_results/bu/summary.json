@@ -1,0 +1,295 @@
+{
+  "totalTransactions": 62,
+  "successCount": 62,
+  "failureCount": 0,
+  "successRate": 1,
+  "testModeCount": 62,
+  "routeDistribution": {
+    "uniswap-to-traderjoe": 31,
+    "traderjoe-to-uniswap": 31,
+    "unknown": 0
+  },
+  "dexAccuracy": {
+    "uniswap": {
+      "firstLeg": {
+        "count": 31,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 31,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "count": 31,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 31,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    }
+  },
+  "profitMetrics": {
+    "USDC": {
+      "totalProfit": "-0.274018",
+      "averageProfit": "-0.004419",
+      "medianProfit": "-0.003816",
+      "profitPredictionAccuracy": 0,
+      "profitableTradeCount": 3,
+      "unprofitableTradeCount": 59
+    }
+  },
+  "suggestedAdjustmentFactors": {
+    "uniswap": {
+      "firstLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 31
+      },
+      "secondLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 31
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 31
+      },
+      "secondLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 31
+      }
+    }
+  },
+  "scenarioAnalysis": {
+    "byTradeSize": {
+      "small": {
+        "count": 4,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      },
+      "medium": {
+        "count": 32,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      },
+      "large": {
+        "count": 26,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      }
+    },
+    "byProfitability": {
+      "profitable": {
+        "count": 3,
+        "avgAccuracy": 0,
+        "adjustmentFactors": {
+          "uniswapFirst": 1,
+          "uniswapSecond": 1,
+          "traderjoeFirst": 1,
+          "traderjoeSecond": 1
+        }
+      },
+      "unprofitable": {
+        "count": 59,
+        "avgAccuracy": 0,
+        "adjustmentFactors": {
+          "uniswapFirst": 1,
+          "uniswapSecond": 1,
+          "traderjoeFirst": 1,
+          "traderjoeSecond": 1
+        }
+      }
+    }
+  },
+  "temporalAnalysis": {
+    "accuracyTrend": [
+      {
+        "timeRange": "2025-03-14T15:00",
+        "count": 62,
+        "averageAccuracy": 0
+      }
+    ],
+    "adjustmentFactorTrend": [
+      {
+        "timeRange": "2025-03-14T15:00",
+        "uniswapFirstLeg": 1,
+        "uniswapSecondLeg": 1,
+        "traderjoeFirstLeg": 1,
+        "traderjoeSecondLeg": 1
+      }
+    ]
+  },
+  "timeRange": {
+    "first": "2025-03-14T15:33:16.000Z",
+    "last": "2025-03-14T15:55:12.000Z"
+  }
+}

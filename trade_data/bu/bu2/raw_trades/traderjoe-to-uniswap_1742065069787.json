@@ -1,0 +1,98 @@
+{
+  "id": "traderjoe-to-uniswap_1742065069787",
+  "timestamp": 1742065076,
+  "direction": "traderjoe-to-uniswap",
+  "config": {
+    "startDex": "traderjoe",
+    "endDex": "uniswap",
+    "inputAmount": "14.884008",
+    "testMode": true,
+    "firstLeg": {
+      "dex": "traderjoe",
+      "expectedOutput": "0.802055440647220238",
+      "priceImpact": 0,
+      "formattedPrice": "0.0538871",
+      "routerAddress": "0x18556DA13313f3532c54711497A8FedAC273220E",
+      "poolAddress": "0x864d4e5Ee7318e97483DB7EB0912E09F161516EA",
+      "fee": 0.0490325
+    },
+    "secondLeg": {
+      "dex": "uniswap",
+      "expectedOutput": "14.877263",
+      "priceImpact": 0.05013,
+      "formattedPrice": "18.5489",
+      "routerAddress": "0xbb00FF08d01D300023C629E8fFfFcb65A5a578cE",
+      "poolAddress": "0xfAe3f424a0a47706811521E3ee268f00cFb5c45E",
+      "fee": 500
+    }
+  },
+  "expectedProfit": "-0.006745",
+  "result": {
+    "success": true,
+    "transactionHash": "0xe68e07bcc25333be3a2f71ce70e8c1be9e27bcd09b2eea896876fbc07709d092",
+    "profit": "-0.006745",
+    "finalBalance": "50.522777",
+    "swapCheckpoints": [
+      {
+        "stage": "BeforeFirstSwap",
+        "token": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        "actualBalance": "50529522",
+        "expectedBalance": "14884008",
+        "timestamp": "1742065072",
+        "difference": "+35645514"
+      },
+      {
+        "stage": "AfterFirstSwap",
+        "token": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+        "actualBalance": "802159772560156237",
+        "expectedBalance": "802055440647220238",
+        "timestamp": "1742065072",
+        "difference": "+104331912935999"
+      },
+      {
+        "stage": "AfterSecondSwap",
+        "token": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        "actualBalance": "50522777",
+        "expectedBalance": "14877263",
+        "timestamp": "1742065072",
+        "difference": "+35645514"
+      }
+    ],
+    "validationCheckpoints": [
+      {
+        "stage": "InputValidation",
+        "detail": "Pass"
+      },
+      {
+        "stage": "BalanceValidation",
+        "detail": "Pass"
+      },
+      {
+        "stage": "FirstRouterApproval",
+        "detail": "Sufficient approval already exists"
+      },
+      {
+        "stage": "FirstSwap",
+        "detail": "Pass"
+      },
+      {
+        "stage": "IntermediateTokenReceived",
+        "detail": "Pass"
+      },
+      {
+        "stage": "SecondRouterApproval",
+        "detail": "Sufficient approval already exists"
+      },
+      {
+        "stage": "SecondSwap",
+        "detail": "Pass"
+      },
+      {
+        "stage": "ProfitValidation",
+        "detail": "Test mode - allowing zero/negative profit"
+      }
+    ],
+    "gasUsed": "317625",
+    "effectiveGasPrice": "3"
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "id": "uniswap-to-traderjoe_usdc_wavax_1746835956782",
+  "timestamp": 1746835962,
+  "direction": "uniswap-to-traderjoe",
+  "tokenPair": "USDC-WAVAX",
+  "useFlashLoan": true,
+  "config": {
+    "startDex": "uniswap",
+    "endDex": "traderjoe",
+    "inputAmount": "1.498658",
+    "testMode": true,
+    "firstLeg": {
+      "dex": "uniswap",
+      "expectedOutput": "0.06399391146716344",
+      "priceImpact": 0.05007,
+      "formattedPrice": "0.0427008",
+      "routerAddress": "0xbb00FF08d01D300023C629E8fFfFcb65A5a578cE",
+      "poolAddress": "0xfAe3f424a0a47706811521E3ee268f00cFb5c45E",
+      "fee": 500
+    },
+    "secondLeg": {
+      "dex": "traderjoe",
+      "expectedOutput": "1.496426",
+      "priceImpact": 0.09,
+      "formattedPrice": "23.383881",
+      "routerAddress": "0x18556DA13313f3532c54711497A8FedAC273220E",
+      "poolAddress": "0x864d4e5Ee7318e97483DB7EB0912E09F161516EA",
+      "fee": 0.3
+    }
+  },
+  "expectedProfit": "-0.002232",
+  "flashLoanDetails": {
+    "flashLoanFee": "0.000000",
+    "netProfit": "-0.002232",
+    "feeBps": 0
+  },
+  "result": {
+    "success": true,
+    "transactionHash": "0x9235aff397cec2f30e909c5e725c22bc2662e993cbc70e3613e46398283b6238",
+    "profit": "-0.002232",
+    "finalBalance": "1.496426",
+    "accountBalance": "1.496426",
+    "flashLoanFee": "0",
+    "netProfit": "-0.002232",
+    "swapCheckpoints": [
+      {
+        "stage": "BeforeFirstSwap",
+        "token": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        "actualBalance": "1498658",
+        "expectedBalance": "1498658",
+        "timestamp": "1746835962334",
+        "difference": "+0"
+      },
+      {
+        "stage": "first",
+        "token": "0xbb00FF08d01D300023C629E8fFfFcb65A5a578cE",
+        "actualBalance": "1498658",
+        "expectedBalance": "63993911467163440",
+        "timestamp": "1746835962336",
+        "difference": "-63993911465664782"
+      },
+      {
+        "stage": "AfterFirstSwap",
+        "token": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+        "actualBalance": "63993911467163440",
+        "expectedBalance": "63993911467163440",
+        "timestamp": "1746835962338",
+        "difference": "+0"
+      },
+      {
+        "stage": "second",
+        "token": "0x18556DA13313f3532c54711497A8FedAC273220E",
+        "actualBalance": "63993911467163440",
+        "expectedBalance": "1496426",
+        "timestamp": "1746835962340",
+        "difference": "+63993911465667014"
+      },
+      {
+        "stage": "AfterSecondSwap",
+        "token": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        "actualBalance": "1496426",
+        "expectedBalance": "1496426",
+        "timestamp": "1746835962343",
+        "difference": "+0"
+      }
+    ],
+    "validationCheckpoints": [
+      {
+        "stage": "ExpectedValues",
+        "detail": "First: 63993911467163440, Second: 1496426, TestMode: true"
+      },
+      {
+        "stage": "FlashLoanCallback",
+        "detail": "Starting callback, token: 0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e, amount: 1498658"
+      },
+      {
+        "stage": "InputContext",
+        "detail": "Amount: 1498658, Expected1: 63993911467163440, Expected2: 1496426, TestMode: true"
+      },
+      {
+        "stage": "FirstSwap",
+        "detail": "Success"
+      },
+      {
+        "stage": "FirstSwapBalances",
+        "detail": "Initial: 17012679607996, Current: 64010924146771436"
+      },
+      {
+        "stage": "SecondSwap",
+        "detail": "Success"
+      },
+      {
+        "stage": "BalanceParams",
+        "detail": "Initial: 6446666, Final: 6444434, Input: 1498658"
+      },
+      {
+        "stage": "ProfitCalculation",
+        "detail": "-2232"
+      },
+      {
+        "stage": "ProfitDetails",
+        "detail": "Actual: -2232, Expected: -2232, TestMode: true"
+      },
+      {
+        "stage": "ProfitValidation",
+        "detail": "TestMode"
+      },
+      {
+        "stage": "ArbitrageExecution",
+        "detail": "Success"
+      },
+      {
+        "stage": "MetricsWarning",
+        "detail": "Profit not added to metrics (negative)"
+      },
+      {
+        "stage": "RepaymentInfo",
+        "detail": "Principal: 1498658, Fee: 0, Total: 1498658, Balance: 6444434"
+      },
+      {
+        "stage": "BalanceChange",
+        "detail": "Pre: 4948008, Post: 4945776"
+      },
+      {
+        "stage": "FlashLoanComplete",
+        "detail": "Success"
+      }
+    ],
+    "gasUsed": "1531119",
+    "effectiveGasPrice": "2.160661087",
+    "tradeContext": {
+      "tradeInputAmount": "1498658",
+      "tradeFinalBalance": "1496426",
+      "expectedFirstOutput": "63993911467163440",
+      "actualFirstOutput": "63993911467163440",
+      "expectedSecondOutput": "1496426",
+      "actualSecondOutput": "-2232"
+    },
+    "firstLegOutput": "0.06399391146716344",
+    "secondLegOutput": "-0.002232"
+  }
+}

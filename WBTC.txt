@@ -1,0 +1,29 @@
+WavaxPriceQuoter initialized with initial price: 17
+2025-05-25T12:42:43.000 CDT [[32minfo[39m]: Logger initialized {
+  "metadata": {
+    "logsDirectory": "/home/todd/WebstormProjects/ExecuteTradeSmartContractFlashLoanV15BTC/logs",
+    "logLevel": "debug",
+    "nodeEnv": "development",
+    "timezone": "America/Chicago"
+  }
+}
+2025-05-25T12:42:43.000 CDT [[32minfo[39m]: GasTransactionUtility initialized {
+  "metadata": {
+    "defaultGasMultiplier": 1.1,
+    "baseGasEstimate": "2000000",
+    "wavaxPriceInUSDC": 17
+  }
+}
+Testing Uniswap quote for direction: USDC-, amount: 1
+2025-05-25T12:42:43.000 CDT [[31merror[39m]: Uniswap Quoter query failed {
+  "metadata": {
+    "error": "Unsupported trade direction: USDC-",
+    "direction": "USDC-",
+    "amount": "1"
+  }
+}
+2025-05-25T12:42:43.000 CDT [[32minfo[39m]: Uniswap Quoter quote result {
+  "metadata": {
+    "quote": null
+  }
+}

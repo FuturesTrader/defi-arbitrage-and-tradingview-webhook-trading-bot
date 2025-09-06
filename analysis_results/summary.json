@@ -1,0 +1,379 @@
+{
+  "totalTransactions": 4,
+  "successCount": 4,
+  "failureCount": 0,
+  "successRate": 1,
+  "testModeCount": 4,
+  "routeDistribution": {
+    "uniswap-to-traderjoe": 4,
+    "traderjoe-to-uniswap": 0,
+    "unknown": 0
+  },
+  "tokenPairDistribution": {
+    "USDC-WAVAX": 2,
+    "USDC-WBTC": 2,
+    "unknown": 0
+  },
+  "dexAccuracy": {
+    "uniswap": {
+      "firstLeg": {
+        "count": 4,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 0,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "count": 0,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 4,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    }
+  },
+  "wavaxDexAccuracy": {
+    "uniswap": {
+      "firstLeg": {
+        "count": 2,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 0,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "count": 0,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 2,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    }
+  },
+  "wbtcDexAccuracy": {
+    "uniswap": {
+      "firstLeg": {
+        "count": 2,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 0,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "count": 0,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      },
+      "secondLeg": {
+        "count": 2,
+        "average": 0,
+        "median": 0,
+        "stdDev": 0,
+        "min": 0,
+        "max": 0,
+        "data": [
+          0,
+          0
+        ],
+        "adjustmentFactor": 1,
+        "confidence": "low"
+      }
+    }
+  },
+  "profitMetrics": {
+    "USDC": {
+      "totalProfit": "-0.016982",
+      "averageProfit": "-0.004245",
+      "medianProfit": "-0.004314",
+      "profitPredictionAccuracy": 0.2808266333828443,
+      "profitableTradeCount": 0,
+      "unprofitableTradeCount": 4
+    }
+  },
+  "suggestedAdjustmentFactors": {
+    "uniswap": {
+      "firstLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 4
+      },
+      "secondLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 0
+      }
+    },
+    "traderjoe": {
+      "firstLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 0
+      },
+      "secondLeg": {
+        "factor": 1,
+        "confidence": "low",
+        "sampleSize": 4
+      }
+    }
+  },
+  "tokenPairAdjustmentFactors": {
+    "wavax": {
+      "uniswap": {
+        "firstLeg": {
+          "factor": 1,
+          "confidence": "low",
+          "sampleSize": 2
+        },
+        "secondLeg": {
+          "factor": 1,
+          "confidence": "low",
+          "sampleSize": 0
+        }
+      },
+      "traderjoe": {
+        "firstLeg": {
+          "factor": 1,
+          "confidence": "low",
+          "sampleSize": 0
+        },
+        "secondLeg": {
+          "factor": 1,
+          "confidence": "low",
+          "sampleSize": 2
+        }
+      }
+    },
+    "wbtc": {
+      "uniswap": {
+        "firstLeg": {
+          "factor": 1,
+          "confidence": "low",
+          "sampleSize": 2
+        },
+        "secondLeg": {
+          "factor": 1,
+          "confidence": "low",
+          "sampleSize": 0
+        }
+      },
+      "traderjoe": {
+        "firstLeg": {
+          "factor": 1,
+          "confidence": "low",
+          "sampleSize": 0
+        },
+        "secondLeg": {
+          "factor": 1,
+          "confidence": "low",
+          "sampleSize": 2
+        }
+      }
+    }
+  },
+  "scenarioAnalysis": {
+    "byTradeSize": {
+      "small": {
+        "count": 0,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      },
+      "medium": {
+        "count": 4,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      },
+      "large": {
+        "count": 0,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      }
+    },
+    "byTokenPair": {
+      "USDC-WAVAX": {
+        "count": 2,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      },
+      "USDC-WBTC": {
+        "count": 2,
+        "accuracyUniFirst": 0,
+        "accuracyJoeFirst": 0,
+        "accuracyUniSecond": 0,
+        "accuracyJoeSecond": 0
+      }
+    },
+    "byProfitability": {
+      "profitable": {
+        "count": 0,
+        "avgAccuracy": 0,
+        "adjustmentFactors": {
+          "uniswapFirst": 1,
+          "uniswapSecond": 1,
+          "traderjoeFirst": 1,
+          "traderjoeSecond": 1
+        }
+      },
+      "unprofitable": {
+        "count": 4,
+        "avgAccuracy": 0,
+        "adjustmentFactors": {
+          "uniswapFirst": 1,
+          "uniswapSecond": 1,
+          "traderjoeFirst": 1,
+          "traderjoeSecond": 1
+        }
+      }
+    }
+  },
+  "temporalAnalysis": {
+    "accuracyTrend": [
+      {
+        "timeRange": "2025-05-10T00:00",
+        "count": 4,
+        "averageAccuracy": 0
+      }
+    ],
+    "adjustmentFactorTrend": [
+      {
+        "timeRange": "2025-05-10T00:00",
+        "uniswapFirstLeg": 1,
+        "uniswapSecondLeg": 1,
+        "traderjoeFirstLeg": 1,
+        "traderjoeSecondLeg": 1
+      }
+    ]
+  },
+  "timeRange": {
+    "first": "2025-05-10T00:11:55.000Z",
+    "last": "2025-05-10T00:12:42.000Z"
+  },
+  "flashLoanMetrics": {
+    "count": 4,
+    "successCount": 4,
+    "failureCount": 0,
+    "successRate": 1,
+    "totalGrossProfit": "-0.016982",
+    "totalFees": "0.000000",
+    "totalNetProfit": "-0.016982",
+    "averageNetProfit": "-0.004246",
+    "feeBps": 0
+  },
+  "executionTypes": {
+    "flashLoan": 4,
+    "regular": 0
+  }
+}

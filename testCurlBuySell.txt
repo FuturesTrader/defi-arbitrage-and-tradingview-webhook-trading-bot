@@ -1,0 +1,31 @@
+curl -X POST http://localhost:3001/webhook/tradingview \
+  -H "Content-Type: application/json" \
+  -d '{"side":"buy","product":"BTC/USDC","network":"Avalanche","exchange":"Uniswap","secret":"ef81790ede6e4348726ce38936bd9aecc4e564e77da4b12e21e4a184b99b2b96"}'
+
+
+curl -X POST http://localhost:3001/webhook/tradingview \
+  -H "Content-Type: application/json" \
+  -d '{"side":"sell","product":"BTC/USDC","network":"Avalanche","exchange":"Uniswap","secret":"ef81790ede6e4348726ce38936bd9aecc4e564e77da4b12e21e4a184b99b2b96"}'
+
+curl -X POST http://localhost:3001/webhook/tradingview \
+  -H "Content-Type: application/json" \
+  -d '{"side":"buy","product":"BTC/USDC","network":"Arbitrum","exchange":"Uniswap","secret":"ef81790ede6e4348726ce38936bd9aecc4e564e77da4b12e21e4a184b99b2b96"}'
+
+
+curl -X POST http://localhost:3001/webhook/tradingview \
+  -H "Content-Type: application/json" \
+  -d '{"side":"sell","product":"BTC/USDC","network":"Arbitrum","exchange":"Uniswap","secret":"ef81790ede6e4348726ce38936bd9aecc4e564e77da4b12e21e4a184b99b2b96"}'
+
+curl -X POST http://localhost:3001/webhook/tradingview \
+  -H "Content-Type: application/json" \
+  -d '{"side":"buy","product":"ETH/USDC","network":"Arbitrum","exchange":"Uniswap","secret":"ef81790ede6e4348726ce38936bd9aecc4e564e77da4b12e21e4a184b99b2b96"}'
+
+curl -X POST http://localhost:3001/webhook/tradingview \
+  -H "Content-Type: application/json" \
+  -d '{"side":"sell","product":"ETH/USDC","network":"Arbitrum","exchange":"Uniswap","secret":"ef81790ede6e4348726ce38936bd9aecc4e564e77da4b12e21e4a184b99b2b96"}'
+
+Webhook tradingview code {{strategy.order.alert_message}}
+
+remove a particular trade pair
+yarn trade:remove pair_trade_1751081929887_zls66z_trade_1751081962706_b9g6dj
+

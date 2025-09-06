@@ -1,0 +1,116 @@
+[
+  {
+    "name": "uniswap",
+    "networks": [
+      "arbitrum",
+      "avalanche",
+      "polygon",
+      "base"
+    ],
+    "routers": {
+      "arbitrum": "0x5E325eDA8064b456f4781070C0738d849c824258",
+      "avalanche": "0x4Dae2f939ACf50408e13d58534Ff8c2776d45265",
+      "polygon": "0xec7BE89e9d109e7e3Fec59c222CF297125FEFda2",
+      "base": "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD"
+    },
+    "factory": {
+      "v2": {
+        "arbitrum": "0xf1D7CC64Fb4452F05c498126312eBE29f30Fbcf9",
+        "avalanche": "0x9e5A52f57b3038F1B8EeE45F28b3C1967e22799C",
+        "polygon": "0x9e5A52f57b3038F1B8EeE45F28b3C1967e22799C",
+        "base": "0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6"
+      },
+      "v3": {
+        "arbitrum": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+        "avalanche": "0x740b1c1de25031C31FF4fC9A62f554A55cdC1baD",
+        "polygon": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+        "base": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD"
+      }
+    }
+  },
+  {
+    "name": "pancakeswap",
+    "networks": ["arbitrum", "base"],
+    "routers": {
+      "arbitrum": "0x32226588378236Fd0c7c4053999F88aC0e5cAc77",
+      "base": "0x678Aa4bF4E210cf2166753e054d5b7c31cc7fa86"
+    },
+    "factory": {
+    "v2": {
+      "arbitrum": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E",
+      "base": "0x02a84c1b3BBD7401a5f7fa98a384EBC70bB5749E"
+    },
+    "v3": {
+      "arbitrum": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+      "base": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865"
+    }
+  }
+  },
+  {
+    "name": "sushiswap",
+    "networks": ["arbitrum", "base", "polygon"],
+    "routers": {
+      "arbitrum": "0xf2614A233c7C3e7f08b1F887Ba133a13f1eb2c55",
+      "base": "0xf2614A233c7C3e7f08b1F887Ba133a13f1eb2c55",
+      "polygon": "0xf2614A233c7C3e7f08b1F887Ba133a13f1eb2c55"
+    },
+    "factory": {
+      "v2": {
+        "arbitrum": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
+        "base": "0x71524B4f93c58fcbF659783284E38825f0622859",
+        "polygon": "0xB45e53277a7e0F1D35f2a77160e91e25507f1763"
+      },
+      "v3": {
+        "arbitrum": "0x1af415a1EbA07a4986a52B6f2e7dE7003D82231e",
+        "base": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
+        "polygon": "0x917933899c6a5F8E37F31E19f92CdBFF7e8FF0e2"
+      }
+    }
+  },
+  {
+    "name": "baseswap",
+    "networks": ["base"],
+    "routers": {
+      "base": "0x1B8eea9315bE495187D873DA7773a874545D9D48"
+    },
+    "factory": {
+      "v2": {
+         "base": "0xFDa619b6d20975be80A10332cD39b9a4b0FAa8BB"
+      },
+      "v3": {
+        "base": "0x38015D05f4fEC8AFe15D7cc0386a126574e8077B"
+      }
+    }
+  },
+  {
+    "name": "traderjoe",
+    "networks": ["avalanche"],
+    "routers": {
+      "avalanche": "0x18556DA13313f3532c54711497A8FedAC273220E"
+    },
+    "factory": {
+      "lb": {
+        "avalanche": "0xb43120c4745967fa9b93E79C149E66B0f2D6Fe0c"
+      },
+      "lb": {
+        "avalanche": "0x8e42f2F4101563bF679975178e880FD87d3eFd4e"
+      }
+    }
+  },
+  {
+    "name": "quickswap",
+    "networks": ["polygon"],
+    "routers": {
+      "polygon": "0xf5b509bB0909a69B1c207E495f687a596C168E12"
+    },
+    "factory": {
+      "v2": {
+        "polygon": "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32"
+      },
+      "v3": {
+        "polygon": "0x411b0fAcC3489691f28ad58c47006AF5E3Ab3A28"
+      }
+    }
+  }
+]
+

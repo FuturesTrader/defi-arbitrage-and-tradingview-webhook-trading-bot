@@ -1,0 +1,62 @@
+[
+  {
+    "tokenName": "WETH",
+    "standardTokenName": "ETH"
+  }
+,
+  {
+    "tokenName": "WETH.e",
+    "standardTokenName": "ETH"
+  }
+,
+  {
+    "tokenName": "WAVAX",
+    "standardTokenName": "AVAX"
+  }
+,
+  {
+    "tokenName": "AVAX",
+    "standardTokenName": "AVAX"
+  }
+,
+  {
+    "tokenName": "WBTC",
+    "standardTokenName": "BTC"
+  }
+,
+  {
+    "tokenName": "cbBTC",
+    "standardTokenName": "BTC"
+  }
+,
+  {
+    "tokenName": "LINK",
+    "standardTokenName": "LINK"
+  }
+,
+  {
+    "tokenName": "AAVE",
+    "standardTokenName": "AAVE"
+  }
+,
+  {
+    "tokenName": "UNI",
+    "standardTokenName": "UNI"
+  }
+,
+  {
+    "tokenName": "USDC",
+    "standardTokenName": "USDC"
+  }
+,
+  {
+    "tokenName": "USDT",
+    "standardTokenName": "USDT"
+  }
+,
+  {
+    "tokenName": "DAI",
+    "standardTokenName": "DAI"
+  }
+]
+
