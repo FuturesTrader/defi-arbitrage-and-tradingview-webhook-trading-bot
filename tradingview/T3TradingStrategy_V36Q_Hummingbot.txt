@@ -1,0 +1,942 @@
+// T3 Trading Strategy V36N - Hummingbot Enhanced + T3 Slope Change Stop Loss
+// 🔧 CRITICAL FIX: Micro-value token slope signal detection (resolves slope signals not working for tokens like 0.0000000045)
+// 🔧 ENHANCED: Slope calculation with improved micro-value sensitivity
+// 🔧 MAINTAINED: 100% backward compatibility with all other working features (patterns, crossovers, etc.)
+// 🤖 NEW: Hummingbot webhook integration with JSON alerts
+// ⭐ NEW: T3 Slope Change Stop Loss - Exit positions based on T3 slope direction changes
+// 🔧 ENHANCED:Added clmm and amm types for dexs on hummingbot
+
+//@version=6
+strategy("T3 Trading Strategy V36Q - Enhanced + Slope Change SL", 
+ shorttitle="T3V36Q", 
+ overlay=true, 
+ default_qty_type=strategy.percent_of_equity, 
+ default_qty_value=10, 
+ process_orders_on_close=false)
+
+strategy.risk.allow_entry_in(strategy.direction.all)
+
+// ==================== Strategy Inputs ====================
+// T3 Parameters
+src = input.source(close, title="Source", group="T3 Parameters")
+length = input.int(14, title="T3 Length", minval=1, maxval=50, group="T3 Parameters")
+vFactor = input.float(0.7, title="Volume Factor", minval=0.01, maxval=1, step=0.01, group="T3 Parameters")
+
+// 🔧 : Smart Value Detection for Small Tokens
+smartValueGroup = "Smart Value Detection"
+enableSmartValueDetection = input.bool(true, title="Enable Smart Value Detection", tooltip="Automatically adjusts thresholds for very small token values", group=smartValueGroup)
+manualValueThreshold = input.float(0.001, title="Small Value Threshold", minval=0.0000000001, step=0.0000000001, tooltip="Values below this are considered 'small values' and get adjusted thresholds", group=smartValueGroup)
+
+// 🔧 CRITICAL FIX: More conservative small value detection and scaling
+isSmallValue = enableSmartValueDetection and close < manualValueThreshold and close > 0
+
+// 🔧 CRITICAL FIX: Much more conservative price scaling to prevent over-normalization
+var float safePriceScale = 1.0
+var float safeDynamicMultiplier = 1.0
+
+if isSmallValue and not na(close) and close > 0
+    // 🔧 NEW APPROACH: Use direct decimal place detection instead of logarithmic scaling
+    // Count decimal places to determine appropriate scaling
+    priceStr = str.tostring(close, "#.##################")
+    
+    // For micro-values, use a moderate scaling approach
+    if close < 0.000001  // Below 1 millionth
+        safePriceScale := 10000000.0  // Scale by 10 million (much more conservative)
+        safeDynamicMultiplier := 1000.0
+    else if close < 0.0001  // Below 1 ten-thousandth  
+        safePriceScale := 100000.0   // Scale by 100 thousand
+        safeDynamicMultiplier := 100.0
+    else if close < 0.01    // Below 1 hundredth
+        safePriceScale := 1000.0     // Scale by 1 thousand
+        safeDynamicMultiplier := 10.0
+    else
+        safePriceScale := 1.0
+        safeDynamicMultiplier := 1.0
+else
+    safePriceScale := 1.0
+    safeDynamicMultiplier := 1.0
+
+priceScale = safePriceScale
+dynamicMultiplier = safeDynamicMultiplier
+
+// 🔧 : Entry Parameters with ALL original methods
+directionMethod = input.string("PatternTrigger", title="Direction Method", 
+     options=["Slope", "Crossover", "Both", "SlopeChange", "PatternTrigger"], 
+     tooltip="Method for entries: PatternTrigger uses pattern-based entries", 
+     group="Entry Parameters")
+
+// 🔧 : Pattern parameters
+patternGroup = "Pattern Parameters"
+patternFirstDirection = input.int(3, title="First Direction Bar Count", minval=1, maxval=20, tooltip="Number of bars required in first direction (e.g., 3 down bars)", group=patternGroup)
+patternSecondDirection = input.int(2, title="Second Direction Bar Count", minval=1, maxval=10, tooltip="Number of bars required in opposite direction (e.g., 2 up bars)", group=patternGroup)
+
+// T3 Confirmation (completely independent)
+requireT3Confirmation = input.bool(false, title="Require T3 Slope Confirmation", tooltip="When enabled, signals must align with T3 slope direction", group="Entry Parameters")
+
+// ==================== 🔧 CRITICAL FIX: ENHANCED SLOPE PARAMETERS ====================
+slopeLength = input.int(5, title="Slope Calculation Length", minval=1, tooltip="Number of bars used to calculate the T3 slope", group="Slope Parameters")
+
+// 🔧 CRITICAL FIX: More sensitive base slope threshold for micro-values
+baseSlopeThreshold = input.float(0.0, title="Base Slope Threshold %", minval=0.0, step=0.001, tooltip="Base percentage threshold that auto-adjusts for small values (0.0 = any slope)", group="Slope Parameters")
+
+// 🔧 CRITICAL FIX: Much more sensitive slope threshold calculation
+safeSlopeThreshold = 0.0  // Default to maximum sensitivity
+if isSmallValue and baseSlopeThreshold > 0
+    // For small values, make threshold MUCH smaller (more sensitive)
+    calculatedThreshold = baseSlopeThreshold * 0.001  // Make 1000x more sensitive
+    if not na(calculatedThreshold) and calculatedThreshold >= 0 and calculatedThreshold < 1
+        safeSlopeThreshold := calculatedThreshold
+    else
+        safeSlopeThreshold := 0.0001  // Ultra-sensitive minimum for micro-values
+else if baseSlopeThreshold > 0
+    safeSlopeThreshold := baseSlopeThreshold
+else
+    safeSlopeThreshold := 0.0  // Original "any slope" behavior
+
+slopeThreshold = safeSlopeThreshold
+
+slopeConfirmation = input.int(2, title="Slope Confirmation Bars", minval=1, maxval=5, tooltip="Number of consecutive bars with same slope direction required", group="Slope Parameters")
+slopeMajorityPercent = input.int(60, title="Slope Direction Majority %", minval=51, maxval=100, tooltip="Percentage of slopes in same direction to confirm trend (51-100%)", group="Slope Parameters")
+
+// ==================== 🔧 ENHANCED: STOP LOSS SETTINGS WITH T3 SLOPE CHANGE ====================
+slGroup = "Stop Loss Settings"
+
+// ⭐ NEW: T3 Slope Change Stop Loss
+enableT3SlopeChangeSL = input.bool(false, title="Enable T3 Slope Change Stop Loss", 
+     tooltip="Exit position when T3 slope changes to opposite direction (uses same slope calculation as Direction Method)", 
+     group=slGroup)
+
+// Original stop loss systems (maintained exactly)
+enableRenkoBrickSL = input.bool(true, title="Enable Renko Brick Stop Loss", tooltip="Independent stop loss system", group=slGroup)
+renkoBrickSLThreshold = input.int(2, title="Stop Loss Brick Count", minval=1, tooltip="NEVER affects signal generation", group=slGroup)
+
+// 🔧 : Smart Trailing Stop Loss with dynamic adjustment and bounds checking
+enableTrailingSL = input.bool(false, title="Enable Trailing Stop Loss", tooltip="Independent stop loss system", group=slGroup)
+baseTrailingPercent = input.float(1.5, title="Base Trailing Stop %", minval=0.01, step=0.01, tooltip="Base percentage that auto-adjusts for small values", group=slGroup)
+
+safeTrailingPercent = baseTrailingPercent  // Default fallback
+if isSmallValue
+    calculatedTrailingPercent = math.max(baseTrailingPercent * 2.0, 0.1)
+    if not na(calculatedTrailingPercent) and calculatedTrailingPercent > 0.01 and calculatedTrailingPercent < 50
+        safeTrailingPercent := calculatedTrailingPercent
+    else
+        safeTrailingPercent := 2.0  // Safe default for small values
+else
+    safeTrailingPercent := baseTrailingPercent
+
+trailingPercent = safeTrailingPercent
+
+// 🔧 : Smart ATR Stop Loss with dynamic adjustment and bounds checking
+enableTrailingAtrSL = input.bool(true, title="Enable Trailing ATR Stop Loss", tooltip="Independent stop loss system", group=slGroup)
+atrPeriod = input.int(14, title="ATR Period", minval=1, group=slGroup)
+baseTrailingAtrMultiplier = input.float(2.5, title="Base Trailing ATR Multiplier", minval=0.5, step=0.1, tooltip="Base multiplier that auto-adjusts for small values", group=slGroup)
+
+safeTrailingAtrMultiplier = baseTrailingAtrMultiplier  // Default fallback
+if isSmallValue
+    calculatedAtrMultiplier = math.max(baseTrailingAtrMultiplier * 1.5, 1.0)
+    if not na(calculatedAtrMultiplier) and calculatedAtrMultiplier > 0.5 and calculatedAtrMultiplier < 50
+        safeTrailingAtrMultiplier := calculatedAtrMultiplier
+    else
+        safeTrailingAtrMultiplier := 3.0  // Safe default for small values
+else
+    safeTrailingAtrMultiplier := baseTrailingAtrMultiplier
+
+trailingAtrMultiplier = safeTrailingAtrMultiplier
+
+// 🔧 : Take Profit Settings - COMPLETELY INDEPENDENT
+tpGroup = "Take Profit Settings"
+enableRenkoBrickTP = input.bool(true, title="Enable Renko Brick Take Profit", tooltip="Independent take profit system", group=tpGroup)
+renkoBrickTPThreshold = input.int(4, title="Take Profit Brick Count", minval=1, tooltip="NEVER affects signal generation", group=tpGroup)
+
+// 🔧 NEW: Smart Position Sizing with Quantity Overflow Protection
+tradingGroup = "Trading Controls"
+enableLongs = input.bool(true, title="Enable Long Entries", group=tradingGroup)
+enableShorts = input.bool(true, title="Enable Short Entries", group=tradingGroup)
+
+// Smart position sizing - auto-adjusts for micro-value tokens to prevent quantity overflow
+basePositionPercent = input.float(10.0, title="Base Position Size %", minval=0.1, maxval=50.0, step=0.1, 
+     tooltip="Base percentage of equity to use (auto-adjusts for micro-value tokens)", group=tradingGroup)
+
+// Calculate safe position size for micro-value tokens
+var float safePositionSize = basePositionPercent
+if isSmallValue and not na(close) and close > 0
+    // For micro-value tokens, calculate what percentage would result in a safe quantity
+    currentEquity = strategy.equity
+    if not na(currentEquity) and currentEquity > 0
+        // Calculate how many tokens the base percentage would buy
+        cashAmount = currentEquity * basePositionPercent / 100
+        estimatedQuantity = cashAmount / close
+        
+        // If quantity would be too large, reduce position size
+        maxSafeQuantity = 500000000000.0  // Well below Pine Script's limit
+        if estimatedQuantity > maxSafeQuantity
+            // Calculate a safer percentage
+            safeCashAmount = maxSafeQuantity * close
+            saferPercent = (safeCashAmount / currentEquity) * 100
+            safePositionSize := math.max(0.1, math.min(saferPercent, basePositionPercent))
+        else
+            safePositionSize := basePositionPercent
+    else
+        safePositionSize := basePositionPercent
+else
+    safePositionSize := basePositionPercent
+
+// Additional quantity validation function
+isQuantitySafe(price) =>
+    if na(price) or price <= 0
+        false
+    else
+        equity = strategy.equity
+        if na(equity) or equity <= 0
+            false
+        else
+            cashAmount = equity * safePositionSize / 100
+            estimatedQty = cashAmount / price
+            estimatedQty <= 800000000000.0  // Conservative limit
+
+showDebugLabels = input.bool(false, title="Show Debug Labels", group=tradingGroup)
+
+// ==================== 🔧 : ALERT CONFIGURATION ====================
+alertGroup = "Alert Configuration"
+coin_name = input.string("BTC/USDC", title="Trading Pair", tooltip="Trading pair in format BTC/USDC", group=alertGroup)
+
+network = input.string("Avalanche", title="Network", 
+     options=["Ethereum", "Avalanche", "Arbitrum", "Base", "Polygon", "Solana", "Optimism", "BSC" , "mainnet-beta"], 
+     tooltip="Select the blockchain network", group=alertGroup)
+     
+exchange = input.string("Uniswap", title="Exchange", 
+     options=["Uniswap", "Raydium", "Coinbase", "TraderJoe", "QuickSwap", "SushiSwap", "PancakeSwap", "dYdX", "Binance", "Kraken", "OKX"], 
+     tooltip="Select the exchange or DEX", group=alertGroup)
+
+// 🆕 NEW: Pool Type Selection for DEX trades
+poolType = input.string("n/a", title="Pool Type (DEX only)", 
+     options=["n/a", "amm", "clmm"], 
+     tooltip="Select pool type for DEX trades (AMM or CLMM). Use 'n/a' for CEX or auto-detection", group=alertGroup)
+
+// ==================== 🔧 ENHANCED: BOT CONFIGURATION WITH HUMMINGBOT ====================
+botGroup = "Bot Configuration"
+selectedBot = input.string("Hummingbot", title="Select Bot", 
+     options=["None", "Custom", "Hummingbot", "Octobot", "Coinrule"], 
+     tooltip="Select which trading bot to use for alerts", group=botGroup)
+
+// Custom Bot Configuration
+customWebhookSecret = input.string("your_webhook_secret_here", title="Custom Webhook Secret", 
+     tooltip="Enter your webhook secret for custom bot (will be included in JSON body)", group=botGroup)
+
+// Hummingbot Configuration
+hbotApiKey = input.string("your_api_key_here", title="Hummingbot API Key", tooltip="Your Hummingbot webhook API key for authentication", group=botGroup)
+
+// Octobot Configuration
+octobotBuyCode = input.string("40aaebe4-7935-419a-8a9a-66869574a606", title="Octobot Buy Code", tooltip="Enter the UUID or code for Octobot buy signals", group=botGroup)
+octobotSellCode = input.string("d5876547-9713-4d9a-b356-12b30502a2b5", title="Octobot Sell Code", tooltip="Enter the UUID or code for Octobot sell signals", group=botGroup)
+
+// Coinrule Configuration
+coinruleUserId = input.string("6683f4afccbd5954a20af06d", title="Coinrule User ID", tooltip="Enter your Coinrule User ID", group=botGroup)
+coinruleHookId = input.string("YLANs785bte9fQb_a8f6aOiC", title="Coinrule Hook ID", tooltip="Enter your Coinrule Hook ID", group=botGroup)
+coinruleHookToken = input.string("QoYUe681", title="Coinrule Hook Token", tooltip="Enter your Coinrule Hook Token", group=botGroup)
+
+// ==================== 🔧 : T3 Calculation ====================
+e1 = ta.ema(src, length)
+e2 = ta.ema(e1, length)
+e3 = ta.ema(e2, length)
+e4 = ta.ema(e3, length)
+e5 = ta.ema(e4, length)
+e6 = ta.ema(e5, length)
+
+c1 = -vFactor * vFactor * vFactor
+c2 = 3 * vFactor * vFactor + 3 * vFactor * vFactor * vFactor
+c3 = -6 * vFactor * vFactor - 3 * vFactor - 3 * vFactor * vFactor * vFactor
+c4 = 1 + 3 * vFactor + vFactor * vFactor * vFactor + 3 * vFactor * vFactor
+
+t3Value = c1 * e6 + c2 * e5 + c3 * e4 + c4 * e3
+
+// ==================== 🔧 : COMPLETELY ISOLATED PATTERN DETECTION ====================
+// SIGNAL-ONLY pattern detection system - NEVER affected by stop loss settings
+patternIsUpBar = close > open
+patternIsDownBar = close < open
+
+// SIGNAL-ONLY Pattern counters - COMPLETELY SEPARATE from trade management
+var int signalOnlyUpCount = 0
+var int signalOnlyDownCount = 0
+var int signalPrevUpCount = 0  
+var int signalPrevDownCount = 0
+var int signalLastDirection = 0  // Track last direction: 1=up, -1=down, 0=none
+
+// 🔧 : Signal pattern detection that NEVER depends on stop loss settings
+int currentSignalDirection = patternIsUpBar ? 1 : patternIsDownBar ? -1 : 0
+
+// Update signal-only counters (COMPLETELY isolated from exits)
+if currentSignalDirection != 0
+    if currentSignalDirection != signalLastDirection and signalLastDirection != 0
+        // Direction changed - store the previous sequence count for SIGNALS ONLY
+        if signalLastDirection == 1
+            signalPrevUpCount := signalOnlyUpCount
+        else if signalLastDirection == -1
+            signalPrevDownCount := signalOnlyDownCount
+    
+    // Update current direction counters FOR SIGNALS ONLY
+    if currentSignalDirection == 1  // Up bar
+        if signalLastDirection != 1
+            signalOnlyUpCount := 1
+            signalOnlyDownCount := 0
+        else
+            signalOnlyUpCount := signalOnlyUpCount + 1
+    else if currentSignalDirection == -1  // Down bar
+        if signalLastDirection != -1
+            signalOnlyDownCount := 1
+            signalOnlyUpCount := 0
+        else
+            signalOnlyDownCount := signalOnlyDownCount + 1
+    
+    // Update last direction FOR SIGNALS ONLY
+    signalLastDirection := currentSignalDirection
+
+// 🔧 : Signal pattern detection that triggers ONLY when pattern is first completed
+// THESE SIGNALS ARE NEVER AFFECTED BY STOP LOSS SETTINGS
+signalPatternLongTriggered = signalPrevDownCount >= patternFirstDirection and 
+                             patternIsUpBar and 
+                             signalOnlyUpCount == patternSecondDirection  // EXACTLY equal - triggers once only
+
+signalPatternShortTriggered = signalPrevUpCount >= patternFirstDirection and 
+                             patternIsDownBar and 
+                             signalOnlyDownCount == patternSecondDirection  // EXACTLY equal - triggers once only
+
+// ==================== 🔧 : Enhanced Bar Direction Detection ====================
+isUpBar = close > open
+isDownBar = close < open
+
+// ==================== 🔧 CRITICAL FIX: COMPLETELY REWRITTEN SLOPE CALCULATION FOR MICRO-VALUES ====================
+// 🔧 CRITICAL FIX: More sophisticated slope calculation that works for both normal and micro-value tokens
+var float previousT3 = na
+var float t3Slope = na
+
+// Enhanced slope calculation method
+if not na(previousT3) and not na(t3Value) and previousT3 != 0
+    if isSmallValue
+        // 🔧 CRITICAL FIX: For micro-values, use enhanced percentage calculation with scaling
+        // Calculate the raw percentage change
+        rawPercentageChange = 100 * (t3Value - previousT3) / math.abs(previousT3)
+        
+        if not na(rawPercentageChange)
+            // Apply moderate scaling to make micro-changes detectable
+            scaledPercentageChange = rawPercentageChange * dynamicMultiplier
+            
+            // 🔧 CRITICAL FIX: Much more lenient bounds checking for micro-values
+            if not na(scaledPercentageChange) and math.abs(scaledPercentageChange) < 100000  // Increased from 1000
+                t3Slope := scaledPercentageChange
+            else
+                // If scaled value is too extreme, use the raw percentage but ensure it's detectable
+                if math.abs(rawPercentageChange) > 0.0000001  // Much lower threshold
+                    t3Slope := rawPercentageChange * 10  // Modest scaling
+                else
+                    t3Slope := 0.0
+        else
+            t3Slope := 0.0
+    else
+        // Standard percentage calculation for normal values
+        percentageChange = 100 * (t3Value - previousT3) / math.abs(previousT3)
+        if not na(percentageChange) and math.abs(percentageChange) < 1000
+            t3Slope := percentageChange
+        else
+            t3Slope := 0.0
+else
+    t3Slope := 0.0
+
+previousT3 := t3Value
+
+// 🔧 CRITICAL FIX: Enhanced historical slope calculation for better stability
+float t3SlopeHistorical = na
+if bar_index >= slopeLength and not na(t3Value[slopeLength]) and t3Value[slopeLength] != 0
+    if isSmallValue
+        // 🔧 CRITICAL FIX: Enhanced approach for micro-values
+        // Calculate percentage change over the slope length period
+        historicalPercentageChange = 100 * (t3Value - t3Value[slopeLength]) / math.abs(t3Value[slopeLength])
+        
+        if not na(historicalPercentageChange)
+            // Apply scaling but with much more conservative bounds
+            scaledHistoricalChange = historicalPercentageChange * math.min(dynamicMultiplier, 100)  // Cap multiplier
+            
+            // 🔧 CRITICAL FIX: Much more lenient bounds for micro-values
+            if not na(scaledHistoricalChange) and math.abs(scaledHistoricalChange) < 50000  // Very lenient bounds
+                t3SlopeHistorical := scaledHistoricalChange
+            else
+                // Fallback to raw percentage with minimal scaling
+                if math.abs(historicalPercentageChange) > 0.00000001  // Ultra-low threshold
+                    t3SlopeHistorical := historicalPercentageChange * 5  // Minimal scaling
+                else
+                    t3SlopeHistorical := 0.0
+        else
+            t3SlopeHistorical := 0.0
+    else
+        // Standard calculation for normal values
+        historicalPercentageChange = 100 * (t3Value - t3Value[slopeLength]) / math.abs(t3Value[slopeLength])
+        if not na(historicalPercentageChange) and math.abs(historicalPercentageChange) < 1000
+            t3SlopeHistorical := historicalPercentageChange
+        else
+            t3SlopeHistorical := 0.0
+
+// Use the more stable historical slope method with safety check
+if not na(t3SlopeHistorical)
+    t3Slope := t3SlopeHistorical
+
+// 🔧 CRITICAL FIX: Store and track slopes for multiple bars
+var array<float> slopes = array.new_float(0)
+
+// Only add slope if it's valid and ensure we capture micro-value slopes
+if not na(t3Slope) and (math.abs(t3Slope) > 0.0000001 or not isSmallValue)  // Ultra-low threshold for micro-values
+    array.unshift(slopes, t3Slope)
+    // Maintain array size
+    if array.size(slopes) > slopeConfirmation
+        array.pop(slopes)
+
+// 🔧 : Variables for t3 slope history
+var array<float> t3SlopeHistory = array.new_float(0)
+if not na(t3Slope) and (math.abs(t3Slope) > 0.0000001 or not isSmallValue)
+    array.unshift(t3SlopeHistory, t3Slope)
+    if array.size(t3SlopeHistory) > 5
+        array.pop(t3SlopeHistory)
+
+// 🔧 CRITICAL FIX: Enhanced dynamic slope change detection for micro-values
+safeDynamicSlopeChangeThreshold = 0.001  // Default sensitivity
+if isSmallValue
+    // 🔧 CRITICAL FIX: Make ultra-sensitive for micro-values
+    calculatedChangeThreshold = math.max(slopeThreshold * 0.01, 0.00001)  // 100x more sensitive
+    if not na(calculatedChangeThreshold) and calculatedChangeThreshold >= 0 and calculatedChangeThreshold < 10
+        safeDynamicSlopeChangeThreshold := calculatedChangeThreshold
+    else
+        safeDynamicSlopeChangeThreshold := 0.00001  // Ultra-sensitive for micro-values
+else
+    // For normal values, use standard approach
+    calculatedChangeThreshold = math.max(slopeThreshold * 2.0, 0.001)
+    if not na(calculatedChangeThreshold) and calculatedChangeThreshold >= 0 and calculatedChangeThreshold < 10
+        safeDynamicSlopeChangeThreshold := calculatedChangeThreshold
+    else
+        safeDynamicSlopeChangeThreshold := 0.001
+
+dynamicSlopeChangeThreshold = safeDynamicSlopeChangeThreshold
+var float storedPreviousSlope = 0.0
+
+// 🔧 CRITICAL FIX: Enhanced slope change detection with ultra-sensitive thresholds for micro-values
+bool slopeChangedToBullish = false
+bool slopeChangedToBearish = false
+
+if not na(t3Slope) and not na(storedPreviousSlope)
+    slopeChangedToBullish := t3Slope > dynamicSlopeChangeThreshold and storedPreviousSlope <= -dynamicSlopeChangeThreshold
+    slopeChangedToBearish := t3Slope < -dynamicSlopeChangeThreshold and storedPreviousSlope >= dynamicSlopeChangeThreshold
+
+if not na(t3Slope)
+    storedPreviousSlope := t3Slope
+
+// 🔧 CRITICAL FIX: Enhanced slope majority calculation with ultra-sensitivity for micro-values
+float positiveSlopes = 0
+float negativeSlopes = 0
+int validSlopes = array.size(slopes)
+
+if validSlopes > 0
+    for i = 0 to validSlopes - 1
+        float slope = array.get(slopes, i)
+        if not na(slope)
+            // 🔧 CRITICAL FIX: Use ultra-sensitive threshold for micro-values
+            effectiveThreshold = isSmallValue ? math.max(slopeThreshold, 0.00001) : slopeThreshold
+            
+            if slope > effectiveThreshold
+                positiveSlopes += 1
+            else if slope < -effectiveThreshold
+                negativeSlopes += 1
+
+float positivePercent = validSlopes > 0 ? (positiveSlopes / validSlopes * 100) : 0
+float negativePercent = validSlopes > 0 ? (negativeSlopes / validSlopes * 100) : 0
+
+bool isT3SlopeUp = positivePercent >= slopeMajorityPercent
+bool isT3SlopeDown = negativePercent >= slopeMajorityPercent
+
+// ==================== 🔧 CRITICAL FIX: EDGE DETECTION FOR SLOPE SIGNALS ====================
+// Track previous slope states to create edge-triggered signals (like SlopeChange method)
+var bool prevT3SlopeUp = false
+var bool prevT3SlopeDown = false
+
+// Edge-triggered slope signals - only fire when slope state changes
+bool slopeUpEdge = isT3SlopeUp and not prevT3SlopeUp
+bool slopeDownEdge = isT3SlopeDown and not prevT3SlopeDown
+
+// Update previous state for next bar
+prevT3SlopeUp := isT3SlopeUp
+prevT3SlopeDown := isT3SlopeDown
+
+// ==================== 🔧 : Crossover Signals ====================
+bool crossUp = ta.crossover(src, t3Value)
+bool crossDown = ta.crossunder(src, t3Value)
+
+// ==================== 🔧 FIXED: COMPLETELY SEPARATE TRADE MANAGEMENT COUNTERS ====================
+// TRADE MANAGEMENT ONLY - NEVER affects signal generation
+var int tradeOnlyUpBricks = 0
+var int tradeOnlyDownBricks = 0
+
+// 🔧 CRITICAL FIX: Simplified state tracking for trade management
+var bool tradeManagementActive = false
+
+// ==================== 🔧 : SMART ATR CALCULATION WITH BOUNDS CHECKING ====================
+atrValue = ta.atr(atrPeriod)
+
+// 🔧 : Smart ATR adjustment for small values with bounds checking
+safeAdjustedAtrValue = atrValue  // Default fallback
+if isSmallValue and not na(atrValue) and not na(close)
+    minimumAtr = close * 0.001
+    if not na(minimumAtr) and minimumAtr > 0
+        calculatedAtr = math.max(atrValue, minimumAtr)
+        if not na(calculatedAtr) and calculatedAtr > 1e-15 and calculatedAtr < close * 10
+            safeAdjustedAtrValue := calculatedAtr
+        else
+            safeAdjustedAtrValue := close * 0.01  // Safe fallback
+    else
+        safeAdjustedAtrValue := close * 0.01  // Safe fallback
+else
+    if not na(atrValue) and atrValue > 0
+        safeAdjustedAtrValue := atrValue
+    else
+        safeAdjustedAtrValue := close * 0.01  // Safe fallback
+
+adjustedAtrValue = safeAdjustedAtrValue
+
+// ==================== 🔧 : TRAILING STOP VARIABLES ====================
+var float highestHigh = na
+var float lowestLow = na
+var float longTrailingAtrStop = na
+var float shortTrailingAtrStop = na
+
+// ==================== 🤖 ENHANCED: HUMMINGBOT ALERT FUNCTIONS WITH POOL TYPE ====================
+// Generate Hummingbot JSON webhook alerts with pool type support
+getHummingbotAlert(action, pool_type) =>
+    // Convert coin_name format (BTC/USDC) to symbol format (BTCUSDC)
+    symbolParts = str.split(coin_name, "/")
+    hbotSymbol = array.size(symbolParts) >= 2 ? array.get(symbolParts, 0) + array.get(symbolParts, 1) : coin_name
+    
+    // Convert network and exchange to lowercase for Hummingbot
+    hbotNetwork = str.lower(network)
+    hbotExchange = str.lower(exchange)
+    
+    // Build and return JSON with inline conditional for pool_type
+    '{"api_key":"' + hbotApiKey + '","action":"' + action + '","symbol":"' + hbotSymbol + '","exchange":"' + hbotExchange + '","network":"' + hbotNetwork + '"' + (pool_type == "n/a" ? "" : ',"pool_type":"' + str.lower(pool_type) + '"') + '}'
+
+// ==================== 🔧 ENHANCED: ALERT MESSAGE FUNCTIONS WITH HUMMINGBOT ====================
+createExchangeAlertJSON(side, product, net, exc, pool_type) =>
+     '{"side":"' + side + 
+     '","product":"' + product + 
+     '","network":"' + net + 
+     '","exchange":"' + exc + '"' +
+     (pool_type == "n/a" ? "" : ',"pool_type":"' + pool_type + '"') + '}'
+
+// Custom bot with webhook secret in JSON body
+createCustomAlertJSON(side, product, net, exc, secret) =>
+     '{"side":"' + side + 
+     '","product":"' + product + 
+     '","network":"' + net + 
+     '","exchange":"' + exc + 
+     '","secret":"' + secret + '"}'
+
+createCoinruleAlertJSON(userId, hookId, hookToken, side, product) =>
+     '{"userId":"' + userId + 
+     '","hookId":"' + hookId + 
+     '","hookToken":"' + hookToken + 
+     '","side":"' + side + 
+     '","product":"' + product + '"}'
+
+// ==================== 🔧 ENHANCED: ALERT MESSAGES WITH HUMMINGBOT SUPPORT ====================
+longAlertMessage = selectedBot == "Hummingbot" ? getHummingbotAlert("BUY", poolType) :
+                   selectedBot == "Octobot" ? octobotBuyCode : 
+                   selectedBot == "Coinrule" ? createCoinruleAlertJSON(coinruleUserId, coinruleHookId, coinruleHookToken, "buy", coin_name) :
+                   selectedBot == "Custom" ? createCustomAlertJSON("buy", coin_name, network, exchange, customWebhookSecret) :
+                   createExchangeAlertJSON("buy", coin_name, network, exchange, poolType)
+
+sellAlertMessage = selectedBot == "Hummingbot" ? getHummingbotAlert("SELL", poolType) :
+                   selectedBot == "Octobot" ? octobotSellCode : 
+                   selectedBot == "Coinrule" ? createCoinruleAlertJSON(coinruleUserId, coinruleHookId, coinruleHookToken, "sell", coin_name) :
+                   selectedBot == "Custom" ? createCustomAlertJSON("sell", coin_name, network, exchange, customWebhookSecret) :
+                   createExchangeAlertJSON("sell", coin_name, network, exchange, poolType)
+
+slAlertMessage = selectedBot == "Hummingbot" ? getHummingbotAlert("SELL", poolType) : sellAlertMessage  // Use sell alert for stop losses
+tpAlertMessage = selectedBot == "Hummingbot" ? getHummingbotAlert("SELL", poolType) : sellAlertMessage  // Use sell alert for take profits
+
+// ==================== 🔧 : VALIDATION WITH RELAXED CRITERIA ====================
+isValidT3Value = not na(t3Value) and math.abs(t3Value) < 1e10
+isValidAtrValue = not na(adjustedAtrValue) and adjustedAtrValue > 0 and adjustedAtrValue < close * 100
+isValidTrailingPercent = not na(trailingPercent) and trailingPercent > 0 and trailingPercent < 100
+
+// Allow signal generation to proceed unless values are truly dangerous
+proceedWithSignals = isValidT3Value and isValidAtrValue and isValidTrailingPercent
+
+// ==================== 🔧 : COMPLETELY ISOLATED SIGNAL GENERATION ====================
+// Signal generation system - NEVER affected by stop loss settings
+
+bool basicLongSignal = false
+bool basicShortSignal = false
+
+if proceedWithSignals
+    if directionMethod == "Slope"
+        // 🔧 CRITICAL FIX: Use edge-triggered slope signals instead of continuous state
+        basicLongSignal := slopeUpEdge
+        basicShortSignal := slopeDownEdge
+    else if directionMethod == "Crossover"
+        basicLongSignal := crossUp
+        basicShortSignal := crossDown
+    else if directionMethod == "Both"
+        // 🔧 CRITICAL FIX: For "Both" method, use edge-triggered slope with crossover
+        basicLongSignal := slopeUpEdge and crossUp
+        basicShortSignal := slopeDownEdge and crossDown
+    else if directionMethod == "SlopeChange"
+        basicLongSignal := slopeChangedToBullish
+        basicShortSignal := slopeChangedToBearish
+    else if directionMethod == "PatternTrigger"
+        // Pattern-based signals using ISOLATED counters
+        basicLongSignal := signalPatternLongTriggered
+        basicShortSignal := signalPatternShortTriggered
+
+// Apply T3 confirmation if enabled (uses continuous state for confirmation)
+bool t3ConfirmedLongSignal = basicLongSignal and (not requireT3Confirmation or isT3SlopeUp)
+bool t3ConfirmedShortSignal = basicShortSignal and (not requireT3Confirmation or isT3SlopeDown)
+
+// Final signals with enable/disable controls
+bool finalLongSignal = enableLongs and t3ConfirmedLongSignal
+bool finalShortSignal = enableShorts and t3ConfirmedShortSignal
+
+// ==================== 🔧 CRITICAL FIX: GUARANTEED REVERSAL EXIT LOGIC ====================
+// Close opposite position immediately on new signal (BEFORE entry checks)
+if finalLongSignal and strategy.position_size < 0
+    strategy.close("Short", comment="Signal Reversal", alert_message=slAlertMessage)
+    
+if finalShortSignal and strategy.position_size > 0
+    strategy.close("Long", comment="Signal Reversal", alert_message=slAlertMessage)
+
+// ==================== 🔧 CRITICAL FIX: SAFE ENTRY EXECUTION WITH QUANTITY VALIDATION ====================
+// 🔧 CRITICAL: Simplified position tracking without complex flag interactions
+var int entryBar = na
+var bool entryBarProtection = false
+
+// Entry execution with quantity validation and simplified state tracking
+if finalLongSignal and strategy.position_size == 0 and isQuantitySafe(close)
+    strategy.entry("Long", strategy.long, alert_message=longAlertMessage)
+    entryBar := bar_index
+    entryBarProtection := true
+    // 🔧 CRITICAL FIX: Simple reset for trade management
+    tradeOnlyUpBricks := 0
+    tradeOnlyDownBricks := 0
+    tradeManagementActive := true
+    
+else if finalShortSignal and strategy.position_size == 0 and isQuantitySafe(close)
+    strategy.entry("Short", strategy.short, alert_message=sellAlertMessage)
+    entryBar := bar_index
+    entryBarProtection := true
+    // 🔧 CRITICAL FIX: Simple reset for trade management
+    tradeOnlyUpBricks := 0
+    tradeOnlyDownBricks := 0
+    tradeManagementActive := true
+    
+else
+    entryBarProtection := false
+
+// ==================== 🔧 : SIMPLIFIED ATR TRAILING STOP LOGIC ====================
+// Reset tracking variables on new position
+if strategy.position_size > 0 and strategy.position_size[1] <= 0
+    highestHigh := high
+    lowestLow := na
+    longTrailingAtrStop := close - (adjustedAtrValue * trailingAtrMultiplier)
+    shortTrailingAtrStop := na
+else if strategy.position_size < 0 and strategy.position_size[1] >= 0
+    lowestLow := low
+    highestHigh := na
+    shortTrailingAtrStop := close + (adjustedAtrValue * trailingAtrMultiplier)
+    longTrailingAtrStop := na
+
+// Update tracking values
+if strategy.position_size > 0
+    highestHigh := math.max(nz(highestHigh, high), high)
+    float potentialNewStop = high - (adjustedAtrValue * trailingAtrMultiplier)
+    if not na(longTrailingAtrStop) and potentialNewStop > longTrailingAtrStop
+        longTrailingAtrStop := potentialNewStop
+else if strategy.position_size < 0
+    lowestLow := math.min(nz(lowestLow, low), low)
+    float potentialNewStop = low + (adjustedAtrValue * trailingAtrMultiplier)
+    if not na(shortTrailingAtrStop) and potentialNewStop < shortTrailingAtrStop
+        shortTrailingAtrStop := potentialNewStop
+
+// ==================== 🔧 CRITICAL FIX: SIMPLIFIED TRADE COUNTER UPDATES ====================
+// 🔧 CRITICAL: Simplified logic - only update when we have a position and it's not entry bar
+if strategy.position_size != 0 and tradeManagementActive and not entryBarProtection
+    if isUpBar
+        tradeOnlyUpBricks := tradeOnlyUpBricks + 1
+        tradeOnlyDownBricks := 0
+    else if isDownBar
+        tradeOnlyDownBricks := tradeOnlyDownBricks + 1
+        tradeOnlyUpBricks := 0
+
+// ==================== ⭐ NEW: T3 SLOPE CHANGE STOP LOSS SYSTEM ====================
+// Uses the exact same slope calculation and edge-triggered signals as the Direction Method
+
+// ⭐ T3 Slope Change Stop Loss Detection (INDEPENDENT SYSTEM)
+bool t3SlopeChangeLongSL = enableT3SlopeChangeSL and
+                             strategy.position_size > 0 and  // In long position
+                             slopeChangedToBearish and        // T3 slope changed to bearish (opposite direction)
+                             not entryBarProtection           // Not on entry bar
+
+bool t3SlopeChangeShortSL = enableT3SlopeChangeSL and 
+                             strategy.position_size < 0 and  // In short position
+                             slopeChangedToBullish and        // T3 slope changed to bullish (opposite direction)
+                             not entryBarProtection           // Not on entry bar
+
+// ==================== 🔧 CRITICAL FIX: SIMPLIFIED EXIT SYSTEMS WITH T3 SLOPE CHANGE ====================
+// Each exit system works independently
+
+// ⭐ NEW: T3 Slope Change Stop Loss (PRIORITY 1 - Most Responsive)
+if t3SlopeChangeLongSL
+    strategy.close("Long", comment="T3 Slope Change SL", alert_message=slAlertMessage)
+    tradeManagementActive := false
+    
+if t3SlopeChangeShortSL
+    strategy.close("Short", comment="T3 Slope Change SL", alert_message=slAlertMessage)
+    tradeManagementActive := false
+
+// Renko Brick Stop Loss (PRIORITY 2)
+bool renkoBrickLongSL = enableRenkoBrickSL and 
+                         strategy.position_size > 0 and 
+                         tradeOnlyDownBricks >= renkoBrickSLThreshold and 
+                         not entryBarProtection
+
+bool renkoBrickShortSL = enableRenkoBrickSL and 
+                         strategy.position_size < 0 and 
+                         tradeOnlyUpBricks >= renkoBrickSLThreshold and 
+                         not entryBarProtection
+
+// Regular Trailing Stop Loss (PRIORITY 3)
+bool regularTrailingLongSL = enableTrailingSL and 
+                             strategy.position_size > 0 and 
+                             not na(highestHigh) and 
+                             not entryBarProtection and 
+                             low <= (highestHigh * (1 - trailingPercent / 100))
+
+bool regularTrailingShortSL = enableTrailingSL and 
+                              strategy.position_size < 0 and 
+                              not na(lowestLow) and 
+                              not entryBarProtection and 
+                              high >= (lowestLow * (1 + trailingPercent / 100))
+
+// ATR Trailing Stop Loss (PRIORITY 4)
+bool atrTrailingLongSL = enableTrailingAtrSL and 
+                         strategy.position_size > 0 and 
+                         not na(longTrailingAtrStop) and 
+                         not entryBarProtection and 
+                         low <= longTrailingAtrStop
+
+bool atrTrailingShortSL = enableTrailingAtrSL and 
+                          strategy.position_size < 0 and 
+                          not na(shortTrailingAtrStop) and 
+                          not entryBarProtection and 
+                          high >= shortTrailingAtrStop
+
+// Renko Brick Take Profit (PRIORITY 5)
+bool renkoBrickLongTP = enableRenkoBrickTP and 
+                         strategy.position_size > 0 and 
+                         tradeOnlyUpBricks >= renkoBrickTPThreshold and 
+                         not entryBarProtection
+
+bool renkoBrickShortTP = enableRenkoBrickTP and 
+                         strategy.position_size < 0 and 
+                         tradeOnlyDownBricks >= renkoBrickTPThreshold and 
+                         not entryBarProtection
+
+// ==================== 🔧 CRITICAL FIX: EXECUTE EXITS WITH SIMPLE STATE RESET ====================
+// Execute exits in priority order with simple state management
+
+// Note: T3 Slope Change SL already executed above (Priority 1)
+
+// Priority 2: Renko Brick Stop Losses
+if renkoBrickLongSL and strategy.position_size > 0  // Additional safety check
+    strategy.close("Long", comment="Renko Brick SL", alert_message=slAlertMessage)
+    tradeManagementActive := false
+    
+if renkoBrickShortSL and strategy.position_size < 0  // Additional safety check
+    strategy.close("Short", comment="Renko Brick SL", alert_message=slAlertMessage)
+    tradeManagementActive := false
+
+// Priority 3: Regular Trailing Stop Losses
+if regularTrailingLongSL and strategy.position_size > 0  // Additional safety check
+    strategy.close("Long", comment="Trailing Stop", alert_message=slAlertMessage)
+    tradeManagementActive := false
+    
+if regularTrailingShortSL and strategy.position_size < 0  // Additional safety check
+    strategy.close("Short", comment="Trailing Stop", alert_message=slAlertMessage)
+    tradeManagementActive := false
+
+// Priority 4: ATR Trailing Stop Losses
+if atrTrailingLongSL and strategy.position_size > 0  // Additional safety check
+    strategy.close("Long", comment="Trailing ATR SL", alert_message=slAlertMessage)
+    tradeManagementActive := false
+    
+if atrTrailingShortSL and strategy.position_size < 0  // Additional safety check
+    strategy.close("Short", comment="Trailing ATR SL", alert_message=slAlertMessage)
+    tradeManagementActive := false
+
+// Priority 5: Take Profits
+if renkoBrickLongTP and strategy.position_size > 0
+    strategy.close("Long", comment="Renko Brick TP", alert_message=tpAlertMessage)
+    tradeManagementActive := false
+    
+if renkoBrickShortTP and strategy.position_size < 0
+    strategy.close("Short", comment="Renko Brick TP", alert_message=tpAlertMessage)
+    tradeManagementActive := false
+
+// ==================== 🔧 : Visualization ====================
+t3Color = isT3SlopeUp ? color.green : isT3SlopeDown ? color.red : color.blue
+plot(t3Value, title="T3", color=t3Color, linewidth=2)
+
+// Background coloring based on T3 slope direction
+bgcolor(isT3SlopeUp ? color.new(color.green, 95) : 
+         isT3SlopeDown ? color.new(color.red, 95) : 
+         color.new(color.gray, 97), title="T3 Slope Background")
+
+// 🔧 : Smart trailing stops visualization
+plot(strategy.position_size > 0 and enableTrailingSL and not na(highestHigh) ? highestHigh * (1 - trailingPercent / 100) : na, 
+     title="Long Trailing Stop", color=color.new(color.purple, 0), style=plot.style_cross, linewidth=2)
+plot(strategy.position_size < 0 and enableTrailingSL and not na(lowestLow) ? lowestLow * (1 + trailingPercent / 100) : na, 
+     title="Short Trailing Stop", color=color.new(color.purple, 0), style=plot.style_cross, linewidth=2)
+
+// Smart ATR trailing stops
+plot(strategy.position_size > 0 and enableTrailingAtrSL ? longTrailingAtrStop : na, 
+     title="Long Trailing ATR Stop", color=color.blue, style=plot.style_cross, linewidth=2)
+plot(strategy.position_size < 0 and enableTrailingAtrSL ? shortTrailingAtrStop : na, 
+     title="Short Trailing ATR Stop", color=color.blue, style=plot.style_cross, linewidth=2)
+
+// 🔧 : Signal visualization
+plotshape(finalLongSignal, title="Long Signal", location=location.belowbar, color=color.green, style=shape.triangleup, size=size.small)
+plotshape(finalShortSignal, title="Short Signal", location=location.abovebar, color=color.red, style=shape.triangledown, size=size.small)
+
+// ⭐ NEW: T3 Slope Change Stop Loss visualization
+plotshape(t3SlopeChangeLongSL, title="T3 Slope Change Long SL", 
+          location=location.abovebar, color=color.new(color.orange, 0), style=shape.xcross, size=size.small, text="T3SL")
+plotshape(t3SlopeChangeShortSL, title="T3 Slope Change Short SL", 
+          location=location.belowbar, color=color.new(color.orange, 0), style=shape.xcross, size=size.small, text="T3SL")
+
+// 🔧 : Pattern visualization - uses SIGNAL-ONLY detection
+plotshape(signalPatternLongTriggered and directionMethod == "PatternTrigger", title="Long Pattern", 
+          location=location.belowbar, color=color.lime, style=shape.diamond, size=size.normal)
+plotshape(signalPatternShortTriggered and directionMethod == "PatternTrigger", title="Short Pattern", 
+          location=location.abovebar, color=color.fuchsia, style=shape.diamond, size=size.normal)
+
+// 🔧 : Slope change signals
+plotshape(slopeChangedToBullish and directionMethod == "SlopeChange", title="Bullish Slope Change", 
+          location=location.belowbar, color=color.new(color.lime, 20), style=shape.triangleup, size=size.normal)  
+plotshape(slopeChangedToBearish and directionMethod == "SlopeChange", title="Bearish Slope Change", 
+          location=location.abovebar, color=color.new(color.fuchsia, 20), style=shape.triangledown, size=size.normal)
+
+// 🔧 : Crossover signals
+plotshape(crossUp and directionMethod == "Crossover", title="Cross Up", 
+          location=location.belowbar, color=color.new(color.green, 30), style=shape.arrowup, size=size.tiny)
+plotshape(crossDown and directionMethod == "Crossover", title="Cross Down", 
+          location=location.abovebar, color=color.new(color.red, 30), style=shape.arrowdown, size=size.tiny)
+
+// ==================== 🔧 ENHANCED: DEBUG SYSTEM WITH T3 SLOPE CHANGE INFO ====================
+if showDebugLabels
+    debugText = "=== V36N+ T3 SLOPE CHANGE SL ===" +
+         "\nBot: " + selectedBot +
+         (selectedBot == "Hummingbot" ? "\n🤖 HUMMINGBOT MODE ACTIVE" : "") +
+         "\nMethod: " + directionMethod +
+         "\n=== 🆕 POOL TYPE CONFIG ===" +
+         "\nPool Type: " + poolType +
+         "\nNetwork: " + network +
+         "\nExchange: " + exchange +
+         "\n=== ⭐ T3 SLOPE CHANGE SL ===" +
+         "\nT3 Slope Change SL Enabled: " + str.tostring(enableT3SlopeChangeSL) +
+         "\nSlope Changed Bullish: " + str.tostring(slopeChangedToBullish) +
+         "\nSlope Changed Bearish: " + str.tostring(slopeChangedToBearish) +
+         "\nT3 Long SL Triggered: " + str.tostring(t3SlopeChangeLongSL) +
+         "\nT3 Short SL Triggered: " + str.tostring(t3SlopeChangeShortSL) +
+         "\n=== MICRO-VALUE DETECTION ===" +
+         "\nPrice: " + str.tostring(close, "#.############") +
+         "\nIs Small Value: " + str.tostring(isSmallValue) +
+         "\nPrice Scale: " + str.tostring(priceScale, "#.##") +
+         "\nDynamic Multiplier: " + str.tostring(dynamicMultiplier, "#.##") +
+         "\n=== SLOPE ANALYSIS (CRITICAL) ===" +
+         "\nT3 Value: " + str.tostring(t3Value, "#.############") +
+         "\nT3 Slope: " + str.tostring(t3Slope, "#.########") +
+         "\nSlope Threshold: " + str.tostring(slopeThreshold, "#.########") +
+         "\nDynamic Slope Threshold: " + str.tostring(dynamicSlopeChangeThreshold, "#.########") +
+         "\nSlopes Array Size: " + str.tostring(validSlopes) +
+         "\nPositive Slopes: " + str.tostring(positiveSlopes) +
+         "\nNegative Slopes: " + str.tostring(negativeSlopes) +
+         "\nPositive %: " + str.tostring(positivePercent, "#.##") +
+         "\nNegative %: " + str.tostring(negativePercent, "#.##") +
+         "\n=== SLOPE SIGNALS ===" +
+         "\nT3 Slope Up: " + str.tostring(isT3SlopeUp) +
+         "\nT3 Slope Down: " + str.tostring(isT3SlopeDown) +
+         "\nSlope Changed Bullish: " + str.tostring(slopeChangedToBullish) +
+         "\nSlope Changed Bearish: " + str.tostring(slopeChangedToBearish) +
+         "\n=== FINAL SIGNALS ===" +
+         "\nBasic Long: " + str.tostring(basicLongSignal) +
+         "\nBasic Short: " + str.tostring(basicShortSignal) +
+         "\nFinal Long: " + str.tostring(finalLongSignal) +
+         "\nFinal Short: " + str.tostring(finalShortSignal) +
+         "\n=== POSITION STATE ===" +
+         "\nPosition Size: " + str.tostring(strategy.position_size) +
+         "\nEntry Bar Protection: " + str.tostring(entryBarProtection) +
+         "\nTrade Management: " + str.tostring(tradeManagementActive)
+    
+    label.new(bar_index, high, debugText, style=label.style_label_down, color=color.new(color.blue, 80), 
+              textcolor=color.white, size=size.small)
+
+// 🔧 CRITICAL FIX: Enhanced warning indicators
+plotchar(isSmallValue and bar_index % 20 == 0, title="Small Value Detected", char="SV", 
+         location=location.abovebar, color=color.new(color.orange, 0), size=size.tiny)
+
+// 🔧 NEW: Slope detection indicator for micro-values
+plotchar(isSmallValue and not na(t3Slope) and math.abs(t3Slope) > 0.00001 and bar_index % 10 == 0, 
+         title="Micro-Value Slope Detected", char="MS", 
+         location=location.belowbar, color=color.new(color.yellow, 0), size=size.tiny)
+
+// 🔧 NEW: Slope signal failure warning
+plotchar(isSmallValue and directionMethod == "Slope" and validSlopes == 0 and bar_index % 15 == 0, 
+         title="No Valid Slopes", char="NS", 
+         location=location.abovebar, color=color.new(color.red, 0), size=size.small)
+
+// 🤖 NEW: Hummingbot integration indicator
+plotchar(selectedBot == "Hummingbot" and finalLongSignal, 
+         title="Hummingbot Long Alert", char="🤖", 
+         location=location.belowbar, 
+         color=color.new(color.blue, 0), size=size.normal)
+
+plotchar(selectedBot == "Hummingbot" and finalShortSignal, 
+         title="Hummingbot Short Alert", char="🤖", 
+         location=location.abovebar, 
+         color=color.new(color.blue, 0), size=size.normal)
+
+// ⭐ NEW: T3 Slope Change Stop Loss activation indicator
+plotchar(enableT3SlopeChangeSL and (slopeChangedToBullish or slopeChangedToBearish) and bar_index % 5 == 0, 
+         title="T3 Slope Change Active", char="T3", 
+         location=location.belowbar, 
+         color=color.new(color.orange, 0), size=size.tiny)
+
+// ==================== ⭐ T3 SLOPE CHANGE STOP LOSS IMPLEMENTATION NOTES ====================
+// This enhanced version adds:
+// 1. ✅ NEW T3 Slope Change Stop Loss system in Stop Loss Settings
+// 2. ✅ Uses identical slope calculation as Direction Method "SlopeChange"
+// 3. ✅ Edge-triggered slope change detection (slopeChangedToBullish/slopeChangedToBearish)
+// 4. ✅ Independent exit system that works with all other stop losses
+// 5. ✅ Priority 1 execution (most responsive stop loss)
+// 6. ✅ Complete backward compatibility with all V36N features
+// 7. ✅ Enhanced debug system showing T3 Slope Change status
+// 8. ✅ Visual indicators for T3 Slope Change stop loss triggers
+// 9. ✅ Entry bar protection (won't exit on same bar as entry)
+// 10. ✅ Proper state management and cleanup
+
+// FUNCTIONALITY SUMMARY:
+// - When in LONG position and T3 slope changes to BEARISH → Exit with "T3 Slope Change SL"
+// - When in SHORT position and T3 slope changes to BULLISH → Exit with "T3 Slope Change SL"
+// - Uses same ultra-sensitive slope calculation optimized for micro-value tokens
+// - Works independently alongside all existing stop loss systems
+// - Can be enabled/disabled without affecting any other functionality
+
+// ==================== 🔧 END OF T3 SLOPE CHANGE ENHANCEMENT ====================
+// ✅ ALL ORIGINAL V36N FEATURES MAINTAINED
+// ✅ Micro-value slope signal detection preserved
+// ✅ Enhanced slope calculation and scaling preserved  
+// ✅ 100% backward compatibility maintained
+// ✅ Hummingbot integration preserved
+// ⭐ T3 Slope Change Stop Loss system added seamlessly
