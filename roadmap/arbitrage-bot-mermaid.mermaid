@@ -1,0 +1,114 @@
+flowchart TB
+    %% Define styles
+    classDef mainClass fill:#2563eb,stroke:#1e40af,stroke-width:2px,color:#fff
+    classDef serviceClass fill:#7c3aed,stroke:#6d28d9,stroke-width:2px,color:#fff
+    classDef dexClass fill:#059669,stroke:#047857,stroke-width:2px,color:#fff
+    classDef contractClass fill:#dc2626,stroke:#b91c1c,stroke-width:2px,color:#fff
+    classDef flashClass fill:#ea580c,stroke:#c2410c,stroke-width:2px,color:#fff
+    classDef utilClass fill:#0891b2,stroke:#0e7490,stroke-width:2px,color:#fff
+    classDef dataClass fill:#64748b,stroke:#475569,stroke-width:2px,color:#fff
+    classDef tokenClass fill:#16a34a,stroke:#15803d,stroke-width:2px,color:#fff
+
+    %% Main Entry Point
+    MAIN[["📊 mainArbitrage.ts<br/>Main Execution Loop<br/>Metrics & Shutdown Handler"]]:::mainClass
+
+    %% Core Services
+    PMS["🔍 PriceMonitorService<br/>Find Opportunities<br/>Parallel Quotes"]:::serviceClass
+    AS["⚡ ArbitrageService<br/>Execute Trades<br/>Gas Management"]:::serviceClass
+    SCS["📝 SmartContractService<br/>Contract Interaction<br/>Event Parsing"]:::serviceClass
+    FLS["💰 FlashLoanService<br/>Balancer V2 Integration<br/>0% Fee Flash Loans"]:::flashClass
+
+    %% Quoter Services
+    QU["📈 quoterUniswap.ts<br/>Uniswap V3 Quotes<br/>USDC/WAVAX/WBTC"]:::dexClass
+    QTJ["📈 quoterTraderJoe.ts<br/>TraderJoe V2 Quotes<br/>USDC/WAVAX/WBTC"]:::dexClass
+
+    %% Smart Contract
+    SC[["🔐 CrossDexArbitrageWithFlashLoan.sol<br/>Atomic Swaps + Flash Loans<br/>Balancer V2 Callback Handler<br/>Multi-Token Support"]]:::contractClass
+
+    %% Flash Loan Provider
+    BV["🏦 Balancer V2 Vault<br/>Flash Loan Provider<br/>0% Fee Loans"]:::flashClass
+
+    %% DEX Protocols
+    UNI["🦄 Uniswap V3<br/>Router & Pools<br/>exactInputSingle"]:::dexClass
+    TJ["🦅 TraderJoe V2<br/>LB Router<br/>swapExactTokensForTokens"]:::dexClass
+
+    %% Token Contracts
+    TOKENS["🪙 Token Contracts<br/>USDC / WAVAX / WBTC<br/>ERC20 Operations"]:::tokenClass
+
+    %% Utility Services
+    GAS["⛽ GasUtility<br/>Gas Optimization"]:::utilClass
+    TIME["⏱️ TimingUtility<br/>Performance Tracking"]:::utilClass
+    LOG["📝 Logger<br/>Trade & Error Logs"]:::utilClass
+
+    %% Data Services
+    TMM["📊 TradeMetricsManager<br/>Performance Analytics"]:::dataClass
+    DC["📈 Data Collection<br/>Quote Accuracy Analysis"]:::dataClass
+    CONFIG["⚙️ Constants & Config<br/>Pool Addresses, Settings"]:::dataClass
+
+    %% Main execution flow
+    MAIN --> PMS
+    MAIN --> AS
+    MAIN --> SCS
+    MAIN --> FLS
+
+    %% Price monitoring flow
+    PMS --> QU
+    PMS --> QTJ
+    QU -.->|Price Data| PMS
+    QTJ -.->|Price Data| PMS
+
+    %% Arbitrage execution flow
+    AS --> SCS
+    SCS --> SC
+    FLS --> SC
+
+    %% Flash loan flow
+    FLS -.->|Request Loan| BV
+    BV -.->|Provide USDC| SC
+    SC -.->|Repay + Fee| BV
+
+    %% Smart contract to DEX flow
+    SC --> UNI
+    SC --> TJ
+    SC --> TOKENS
+
+    %% Utility connections
+    AS -.-> GAS
+    AS -.-> TIME
+    AS -.-> LOG
+    AS -.-> TMM
+    PMS -.-> DC
+
+    %% Configuration flow
+    MAIN -.-> CONFIG
+    AS -.-> CONFIG
+    PMS -.-> CONFIG
+
+    %% Subgraph for Trade Execution Flow
+    subgraph TRADE_FLOW["Trade Execution Flow"]
+        direction LR
+        TF1[1. Monitor Prices] --> TF2[2. Find Opportunity]
+        TF2 --> TF3[3. Request Flash Loan]
+        TF3 --> TF4[4. Execute Atomic Swap]
+        TF4 --> TF5[5. Repay Loan + Profit]
+    end
+
+    %% Subgraph for Supported Pairs
+    subgraph PAIRS["Supported Trading Pairs"]
+        direction TB
+        P1["USDC ↔ WAVAX<br/>(Uniswap V3)"]
+        P2["USDC ↔ WAVAX<br/>(TraderJoe V2)"]
+        P3["USDC ↔ WBTC<br/>(Uniswap V3)"]
+        P4["USDC ↔ WBTC<br/>(TraderJoe V2)"]
+    end
+
+    %% Subgraph for Key Features
+    subgraph FEATURES["Key Features"]
+        direction TB
+        F1["✓ Balancer V2 Flash Loans (0% fee)"]
+        F2["✓ Multi-token support"]
+        F3["✓ Atomic execution"]
+        F4["✓ Parallel price fetching"]
+        F5["✓ Gas optimization"]
+        F6["✓ Error handling & recovery"]
+    end

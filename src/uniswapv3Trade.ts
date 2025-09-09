@@ -15,14 +15,12 @@ import {
     type PublicClient,
     type WalletClient,
     type Abi,
-    ContractFunctionRevertedError
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { arbitrum, avalanche } from 'viem/chains';
 import {
     AlphaRouter,
     SwapType,
-    type V3Route
 } from '@uniswap/smart-order-router';
 import { ethers } from 'ethers';
 import {
@@ -30,9 +28,8 @@ import {
     Token,
     TradeType,
     Percent,
-    Currency,
+
 } from '@uniswap/sdk-core';
-import { Trade } from '@uniswap/v3-sdk';
 import {
     getNetworkConfig,
     getCurrentNetworkKey,
@@ -41,7 +38,6 @@ import {
     POOL_FEES,
     ABIS,
     DUST_THRESHOLDS,
-    type ChainId,
     type ArbitrumTokenSymbol,
     type AvalancheTokenSymbol
 } from './constants.ts';
@@ -50,8 +46,6 @@ import logger from './logger.ts';
 import {
     getErrorMessage,
     getTransactionError,
-    retryOperation,
-    getCurrentTimestamp
 } from './utils.ts';
 import type {
     TradeResult,

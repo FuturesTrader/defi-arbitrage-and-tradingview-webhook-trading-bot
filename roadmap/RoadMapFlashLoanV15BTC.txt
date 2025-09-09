@@ -1,0 +1,162 @@
+## Phase 0: Implement wallet base arbitrage bot - (status complete)
+phase 0 files mainJoe.ts and executeJoeTrade.ts have been added to the project files for reference.
+
+## Phase 1: Optimize Smart Contract to use flash loans with Aave (status Complete)
+- [x] Remove timestamp reliance
+- [x] Add circuit breakers
+- [x] Enhance error reporting
+- [X] Resolve TS errors
+- [X] Ensure all files integrate with latest updates
+- [X] Deploy latest contract
+- [X] Executing arbitrage trades via the contract without flashloans
+- [X] Parsing transaction receipts for events
+- [X] Validating trade parameters
+- [X] Classifying and handling errors
+- [X] Optimize excessive and simultaneous network calls 
+- [X] Eliminate Simultaneous gas calls
+- [X] Classifying and handling errors
+- [X] Key insight and potential root cause: tokens were not approved from the Contract address on Routers
+- [X] Solution to root cause: added approveTokens.js to the deploy scripts
+- [X] Additional failurse on Trader Joe: Updated smartContractService.ts, priceMonitorService.ts, arbitrageService.ts, quoterTraderJoe.ts and CrossDexArbitrage.sol
+- [X] Updates to add additional event logging for failures in  smartContractService.ts, arbitrageService.ts, CrossDexArbitrage.sol, tradeTypes.ts
+- [X] Check arbitrageAbi.ts for alignment with CrossDexArbitrage.sol and smartContractService.ts
+- [X] Update CrossDexArbitrage.sol only check if the trade is profitable.  Most other checks like quote age, slippage, expected amounts out etc have been removed or greatly relaxed.  We are only looking for profit > 0
+- [X] Robust, detailed testing with testSingleSwap.ts.  We continue to see failures and have not created a robust testing script.
+- [X] Resolution of detail testing using the plan outlined in TestingQuoterAribtrageDetailv2.txt.  
+- [X] Integrate updates from testSingleSwap.ts into priceMonitorService.ts, smartContractService.ts and arbitrageService.ts
+- [X] Removal of minprofit and deadline from smart contract.  The only requiremen is a profitable atomic swap
+- [X] Add functions to test live swap without profit requirement for Uniswap to Trader Joe and Trader Joe to Uniswap.  Test cases only
+- [X] Update deployment code to not need minprofit or deadline
+- [X] Deploy updated smart contract without minprofit or deadline.
+- [X] Review testSingleSwap.ts, quoterUniswap.ts, quoterTraderJoe.ts, priceMonitorService.ts and smartContractService to ensure we do NOT use minprofit or deadline.
+- [X] Create test code for new smart contract full arbitrage functions testUniswapToTraderJoe and testTraderJoeToUniswap
+- [X] Run all updates test code for new smart contract per the test plan TestingQuotersAribtrageDetailv4.txt
+- [X] Compare lessons learned with arbitrage functions testUniswapToTraderJoe and testTraderJoeToUniswap in CrossDexArbitrage.sol.  Update CrossDexArbitrage.sol
+- [X] Successful integration of testUniswapToTraderJoe and testTraderJoeToUniswap in CrossDexArbitrage.sol.
+- [X] Integration of testMode (true of false) into entire code base: CrossDexArbitrage.sol, testArbitrage.ts, smartContractService.ts, priceMonitorService.ts and arbitrageService.ts.
+- [X] Successful live test of testMode: true in testArbitrage.ts.  negative profit allowed. ARBITRAGE_SETTINGS.TEST_MODE: true
+- [X] Standardize timing utilities across the codebase
+- [X] Implement quote for WAVAX to USDC for 1 dollar to replace manual 
+- [X] Implement parallel quoting in priceMonitorService.ts 
+- [X] Successful profitable arbitrage trade with testMode: false ARBITRAGE_SETTINGS.TEST_MODE: false
+- [X] Review that we have addressed the missing data in metrics.json.  runDataCollection.ts gathers the data and  analyzeQuoteAccuracy.ts performs the analysis and metrics.json summary
+- [X] Issues regarding account balance vs trade balance in calcultions remain a significant issue
+- [X] Update the smart contract to properly separate account balance vs trade balance
+- [X] Review smartContractService.ts, runDataCollection and analyzeQuoteAccuracy.ts to ensure we separate account balance vs trade balance and that we are aligned with the latest CrossDexArbitrage.sol
+- [X] Update testArbitrage.ts and smartContractService.ts to resolve arithmetic underflow or overflow
+- [X] Run testArbitrage.ts to test latest updates
+- [X] Review analyzeQuoteAccuracy.ts to ensure it aligns with the latest smart contract CrossDexArbitrage.sol
+- [X] Run runDataCollection.ts and analyzeQuoteAccuracy.ts to capture 50 data points for each dex for a total of 100 trades
+- [X] Design the statistical model for improving quote accuracy?
+- [X] Develop price modifiers to improve quote and profit accuracy. This will entail running at least 25 uniswap to trader joe trades and 25 trader joe to uniswap trades to gather data.
+- [X] Based on the data, update quoterUniswap.ts and quoterTraderjoe.ts with the modifiers
+- [X] Review mainArbitrage.ts, priceMonitorService.ts and arbitrageService.ts to ensure alignment with the latest smart contract and price modifier updates
+- [X] Update priceMonitorService.ts to optimize profit calculations
+- [X] Run updated code
+- [X] Update smart contract to reduce reverts
+- [X] Review latest logs.  Decipher methodID 0xc5305933.  Reverts have increased
+- [X] Update smart contract to reduce reverts. CrossDexArbitrage.sol and arbitrageAbi.js
+- [X] Execute successful live arbitrage trade
+- [X] Integrate trader joe flash loan capability into the smart contract CrossDexArbitrage.sol and abi arbitrageAbi.js
+- [X] Update the smart contract CrossDexArbitrageWithFlashLoan.sol and abi arbitrageAbi.js, flashLoanService.ts.  flashLoanService.ts is the new service to manage the flash loan details. CrossDexArbitrageWithFlashLoan.sol is the new smart contract with flash loans
+- [X] Update smartContractServices.ts to be aligned with the latest flashLoanService.ts and CrossDexArbitrageWithFlashLoan.sol
+- [X] Create and update configureFlashLoan.ts to configure the smart contract with the Trader Joe Flash loan address
+- [X] Update getBalance.ts, fundContract.ts, withdrawFunds.ts to work with the latest changes
+- [X] Run current testAritrage.ts to ensure it continues to work with smart contract
+- [X] Create a testFlashLoanArbitrage.ts similar to testAritrage.ts to ensure the smart contract flash loan is working.  Ensure testMode settings for flash loans are working.
+- [X] Execute successful smart contract and flash loan live arbitrage trade. Bugs have been detected
+- [X] Smart Contract update: We have detected and identified bugs in the current flash loan smart contract.  First bug is that loan fees are already incorporated into the quote prices. Update the profit calculation in the smart contract to remove loan fees and only include gas fees.
+- [X] Smart Contract update: Resolve the second bug: Update the function executeFlashLoanArbitrage in the smart contract to improve the double catch:
+- [X] Smart Contract update: Update flash loan code to align with latest trader joe flash loan architecture ERC 3156 Flashloans
+- [X] Generate an updated ABi.
+- [X] Understand trader joe address for flash loans. update: per "Trader Joe Flash Loan Details_.txt" trader joe does not offer flash loans.
+- [X] Update smartContractServices.ts and flashLoanService.ts to only work with flash loans.  Remove non-flash loan arbitrage execution.  Mixing non-flash loan arbitrage and with-flash loan arbitrage was causing errors and bugs in the logs.  Also, ensure we capture a smartloan fee of .08 percent.
+ getDetailTransactions.ts.
+- [X] Review 0xa8db21105105f96b8e4f7bc2e6f9c287547d76778013b210a370dc8742983023.json file to ensure we are successful in testing
+- [X] Update runDataCollection.ts to align with updateded CrossDexArbitrageWithFlashLoan.sol, flashLoanService.ts, smartContractService.ts and arbitrageAbi.ts 
+- [X] Update arbitrageService.ts to align with updateded CrossDexArbitrageWithFlashLoan.sol, flashLoanService.ts, smartContractService.ts and arbitrageAbi.ts 
+- [X] Update analyzeQuoteAccuracy.ts to align with runDataCollection.ts and updateded CrossDexArbitrageWithFlashLoan.sol, flashLoanService.ts, smartContractService.ts and arbitrageAbi.ts 
+- [X] Review and update mainArbitrage.ts to align with updateded arbitrageService.ts, flashLoanService.ts, smartContractService.ts, arbitrageAbi.ts and CrossDexArbitrageWithFlashLoan.sol
+- [X] Develop hardhad code or custom code that will review and analyze CrossDexArbitrageWithFlashLoan.sol to improve gas
+
+
+## Phase 1.5: Optimize Smart Contract to use Balancer flash loans (status complete)
+- [X] Review architecture guide Aave_To_Balancer_Flash_Loan_Implementation_Guide.  based on the review, provide a plan to update CrossDexArbitrageWithFlashLoan.sol.  In this implementation we also want to review optimizing for reduced smart contract size and reduced gas
+- [X] Review prior chat summary and that updated CrossDexArbitrageWithFlashLoan.sol aligns with Aave_To_Balancer_Flash_Loan_Implementation_Guide.txt, smart contract size optimization and gas optimization
+- [X] Review prior chat summary and update approveFlashLoan.js to align with updated CrossDexArbitrageWithFlashLoan.sol.  Note we are maintaining the name CrossDexArbitrageWithFlashLoan.sol
+- [X] Review prior chat summary and update configureFlashLoan.js to align with updated CrossDexArbitrageWithFlashLoan.sol.  Note we are maintaining the name CrossDexArbitrageWithFlashLoan.sol
+- [X] Update hardhad to output the abi and update the abi for deploy and smart contract codebase
+- [X] Compile, deploy contract, configure contract tokens, pools and routers, approve routers, vault and wallet for tokens. Note: Balancer updated their vault contract to 0xbA1333333333a1BA1108E8412f11850A5C319bA9.  Update constants.js and constants.ts with balancer vault address.
+- [X] Review prior chat summary and update flashLoanService.ts to migrate from aave to balancer 
+- [X] Review prior chat summary and update testFlashLoanArbitrage.ts to migrate from aave to balancer 
+- [X] Review prior chat summary and smartContractService.ts in regards to our latest smart contract CrossDexArbitrageWithFlashLoan.sol and arbitrageAbi.ts.  We have simplified and removed several calls to reduce gas and keep the contract simpler.  This update should also address that smartContractServie.ts works only with flash loan smart contracts.  We do not need to support smart contracts that are not using flash loans.
+- [X] Update getBalance.ts to align with prior chat summary and smartContractService.ts CrossDexArbitrageWithFlashLoan.sol and arbitrageAbi.ts.
+- [X] Update fundContract.ts to align with prior chat summary and smartContractService.ts CrossDexArbitrageWithFlashLoan.sol and arbitrageAbi.ts.
+- [X] Update emergencyWithdraw.ts to align with prior chat summary and smartContractService.ts CrossDexArbitrageWithFlashLoan.sol and arbitrageAbi.ts.
+- [X] Help resolve the following errors when runing testFlashLoanArbitrage.ts
+- [X] Ensure CrossDexArbitrageWithFlashLoan.sol can output data per traderjoe-to-uniswap_1744300953374.json
+- [X] Review CrossDexArbitrageWithFlashLoan.sol to resolve overflow error. Errors are in 0x5edf861e9256729fec29508ed25e0ec41eac358e8a32b10f8d0ed05fe81ac09e.json and OverFlowError
+- [X] Review latest testFlashLoanArbitrage.ts to resolve TS errors.  Review tradeTypes.ts as this is likely the issue
+- [X] Review and optimize smartContractService.ts to focus on flash loans and help address overflow errors in flash loans and support CrossDexArbitrageWithFlashLoan.sol
+- [X] Review CrossDexArbitrageWithFlashLoan.sol to ensure we have address overflow error. Errors are in 0x1116953cd22200102cd45adc503f853d8e9a1784319f0a9f9f20772b9ad7aeb7.json and OverFlowError.txt
+- [X] Configure CrossDexArbitrageWithFlashLoan.sol to be exactly like balancer vault identified in BalancerFlashLoanExample.txt
+- [X] Optimize CrossDexArbitrageWithFlashLoan.sol to be less than 24k
+- [X] Compile latest CrossDexArbitrageWithFlashLoan.sol
+- [X] Deploy latest CrossDexArbitrageWithFlashLoan.sol
+- [X] Review getBalance.ts to understand the updates needed for the abi to address the error
+- [X] Review OveFlowError2.txt and 0x0be39baf6d404794f83703f8e3287814f8c308d83fca9a04452d624360f1bddb.json to understand how best to fix CrossDexArbitrageWithFlashLoan.sol
+- [X] We have been unable to get balancer v3 working despite significant updates.  The latest error is "stage": "FlashLoanError",  "data": "Not implemented"  The root cause is likely that Balancer V3 is still in development and needs additional implementation development to properly reference there latest solidity smart contracts. For instance, there is no package manager yet that we can reference.
+- [X] Update the smart contract CrossDexArbitrageWithFlashLoan.sol to use balancer v2.  constants.ts has been updated to include the BALANCER_V2 vault address
+- [X] Successful test with balancer!!!
+
+## Phase 1.6: Update Smart Contract and trading system to trade USDC and WBTC with balancer v2 flash loans (status in progress)
+- [X] Review latest smart contract CrossDexArbitrageWithFlashLoan.sol to see if updates are needed to trade WBTC on avalance.  We may be able to use the configuration files to update the contract
+- [X] Update constants.ts with BTC.b address and pool addresses for trader joe and uniswap for USDC to BTC.b
+- [X] Update test code mainJoe.ts and executeJoeTrade.ts to test wallet trade and that constants.ts is correctly updated
+- [X] Update test code mainUniswap.ts and uniswapv3Trade.ts to test wallet trade and that constants.ts is correctly updated with BTC.b and pool address for uniswap
+- [X] Update findPool.ts to include USDC and WBTC (BTC.b)
+- [X] Update configureUniswap and configureTraderJoe.js.  Current code is for routers so no update needed.
+- [X] Update configurePools.js to include WBTC
+- [X] Update configureTokens.js to include WBTC
+- [X] Update approveTokens.js to include WBTC
+- [X] Update approveFlashLoan.js to include WBTC
+- [X] Update checkAllowances.js to include WBTC
+- [X] Review CrossDexArbitrageWithFlashLoan.sol to determine if we need to redeploy the contract or if we can reconfigure with the latest code updates
+- [X] Update flashLoanService.ts to include WBTC
+- [X] Update smartContractService.ts to include WBTC
+- [X] Update quoterTraderJoe.ts to include WBTC
+- [X] Update quoterUniswap.ts to include WBTC
+- [X] Update testFlashLoanArbitrage.ts to include WBTC
+- [X] Update getBalance.ts to include WBTC
+- [X] Update emergencyWithdraw.ts to include WBTC
+- [X] Update runDataCollection.ts to include WBTC
+- [X] Update analyzeQuoteAccuracy.ts to include WBTC and the updated data format from the recently updated runDataCollection.ts to include WBTC. Raw data is: uniswap-to-traderjoe_usdc_wbtc_1746835909118.json and transaction_index.csv contains the transactions.
+- [X] Update arbitrageService.ts to include WBTC
+- [X] Update priceMonitorService.ts to include WBTC
+- [X] Update mainArbitrage.ts to include WBTC
+- [X] final review before deployment
+
+Actions:
+1) final review before deployment
+----------------------------------------------
+
+Environment:
+1) Typescript
+2) yarn
+3) accuracy and quality of response is more important than speed.
+Files and structure located in projects from prior phase:
+1)mainArbitrage.ts:  main execution code
+2)priceMonitorService.ts:  this code is executed by mainArbitrage.ts and looks for trade opportunities between trader joe and uniswap base on a percentage difference between dexs trader joe and uniswap.  trade direction can be from traderjoe to uniswap or uniswap to traderjoe depending on which has the lower and higher price.
+3)quoterTraderJoe.ts:  this code pulls prices from trader joe dex and is referenced by priceMonitorService.ts.  we do a trade simulation to get realistic prices for comparison
+4)quoterUniswap.ts: this code pulls prices from uniswap dex dex and is referenced by priceMonitorService.ts
+4)arbitrageService.ts:  service module to handle trade directions and swap execution
+5)smartContractService.ts:  service to manage smart contracts.
+8)constants.ts:  constants file
+9)logger.ts: logging code
+10) all source code is in the src directory.  arbitrageServices.ts and priceMonitorService.ts and smartContractService.ts are in the src/services directory
+11) Pool addresses and liquidity have already been verified for Uniswap.  Pool addresses for Trader Joe are dynamically determined by the trader joe sdk
+12) tradeMetrics.ts:  code to capture metrics
+13) tradeType.ts:  types interfaces for tokens and trades
+15) CrossDexArbitrageWithFlashLoan.ts: this is the smart contract with flash loan.  This is critical: the smart contract should be able to receive router, pool and trade related data and addresses to execute on both uniswap and trader joe dexs.  The trade related data will come from quoterUniswap.ts and quoterTraderJoe.ts. 
+16) arbitrageAbi.ts: smart contract deployment abi. 
+17) flashLoanService.ts this is the new flash loan service module

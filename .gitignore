@@ -3,6 +3,7 @@ cache/
 artifacts/
 typechain/
 typechain-types/
+abis/
 
 # Dependencies
 node_modules/
@@ -42,6 +43,7 @@ deployment-info.json
 # Private/Sensitive files
 upload/*.txt
 errors/
+tests/
 
 # Lock files (since using yarn, exclude npm lock)
 package-lock.json

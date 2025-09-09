@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#334155"/>
+    </marker>
+    <marker id="flash-arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#ea580c"/>
+    </marker>
+    <marker id="data-arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#64748b"/>
+    </marker>
+  </defs>
+  <text x="732.761" y="-420.16" text-anchor="middle" style="font-size: 24px; font-weight: bold; fill: rgb(30, 41, 59); white-space: pre; stroke-width: 1;">
+    Cross-DEX Arbitrage Bot with Balancer V2 Flash Loans
+  </text>
+  <text x="732.761" y="-395.16" text-anchor="middle" style="font-size: 16px; fill: rgb(71, 85, 105); white-space: pre; stroke-width: 1;">
+    Supporting USDC-WAVAX and USDC-WBTC Trading Pairs
+  </text>
+  <rect x="582.761" y="-350.16" width="300" height="80" class="main-box" rx="5" style="fill: rgb(37, 99, 235); stroke: rgb(30, 64, 175); stroke-width: 2;"/>
+  <text x="732.761" y="-320.16" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">mainArbitrage.ts</text>
+  <text x="732.761" y="-300.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Main Execution Loop</text>
+  <text x="732.761" y="-285.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Metrics &amp; Shutdown Handler</text>
+  <rect x="232.76" y="-200.16" width="200" height="80" class="service-box" rx="5" style="fill: rgb(124, 58, 237); stroke: rgb(109, 40, 217); stroke-width: 2;"/>
+  <text x="332.761" y="-170.16" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">PriceMonitorService</text>
+  <text x="332.761" y="-150.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Find Opportunities</text>
+  <text x="332.761" y="-135.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Parallel Quotes</text>
+  <rect x="482.761" y="-200.16" width="200" height="80" class="service-box" rx="5" style="fill: rgb(124, 58, 237); stroke: rgb(109, 40, 217); stroke-width: 2;"/>
+  <text x="582.761" y="-170.16" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">ArbitrageService</text>
+  <text x="582.761" y="-150.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Execute Trades</text>
+  <text x="582.761" y="-135.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Gas Management</text>
+  <rect x="732.761" y="-200.16" width="200" height="80" class="service-box" rx="5" style="fill: rgb(124, 58, 237); stroke: rgb(109, 40, 217); stroke-width: 2;"/>
+  <text x="832.761" y="-170.16" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">SmartContractService</text>
+  <text x="832.761" y="-150.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Contract Interaction</text>
+  <text x="832.761" y="-135.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Event Parsing</text>
+  <rect x="982.761" y="-200.16" width="200" height="80" class="flash-box" rx="5" style="fill: rgb(234, 88, 12); stroke: rgb(194, 65, 12); stroke-width: 2;"/>
+  <text x="1082.76" y="-170.16" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">FlashLoanService</text>
+  <text x="1082.76" y="-150.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Balancer V2 Integration</text>
+  <text x="1082.76" y="-135.16" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">0% Fee Flash Loans</text>
+  <rect x="132.76" y="-50.158" width="180" height="80" class="dex-box" rx="5" style="fill: rgb(5, 150, 105); stroke: rgb(4, 120, 87); stroke-width: 2;"/>
+  <text x="222.76" y="-20.158" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">quoterUniswap.ts</text>
+  <text x="222.76" y="-0.158" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Uniswap V3 Quotes</text>
+  <text x="222.76" y="14.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">USDC/WAVAX/WBTC</text>
+  <rect x="352.761" y="-50.158" width="180" height="80" class="dex-box" rx="5" style="fill: rgb(5, 150, 105); stroke: rgb(4, 120, 87); stroke-width: 2;"/>
+  <text x="442.761" y="-20.158" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">quoterTraderJoe.ts</text>
+  <text x="442.761" y="-0.158" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">TraderJoe V2 Quotes</text>
+  <text x="442.761" y="14.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">USDC/WAVAX/WBTC</text>
+  <rect x="582.761" y="99.842" width="300" height="100" class="contract-box" rx="5" style="fill: rgb(220, 38, 38); stroke: rgb(185, 28, 28); stroke-width: 2;"/>
+  <text x="732.761" y="129.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">CrossDexArbitrageWithFlashLoan.sol</text>
+  <text x="732.761" y="149.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Atomic Swaps + Flash Loans</text>
+  <text x="732.761" y="169.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Balancer V2 Callback Handler</text>
+  <text x="732.761" y="184.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Multi-Token Support (WAVAX/WBTC)</text>
+  <rect x="982.761" y="99.842" width="200" height="80" class="flash-box" rx="5" style="fill: rgb(234, 88, 12); stroke: rgb(194, 65, 12); stroke-width: 2;"/>
+  <text x="1082.76" y="129.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">Balancer V2 Vault</text>
+  <text x="1082.76" y="149.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Flash Loan Provider</text>
+  <text x="1082.76" y="164.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">0% Fee Loans</text>
+  <rect x="382.761" y="269.842" width="180" height="80" class="dex-box" rx="5" style="fill: rgb(5, 150, 105); stroke: rgb(4, 120, 87); stroke-width: 2;"/>
+  <text x="472.761" y="299.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">Uniswap V3</text>
+  <text x="472.761" y="319.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Router &amp; Pools</text>
+  <text x="472.761" y="334.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">exactInputSingle</text>
+  <rect x="602.761" y="269.842" width="180" height="80" class="dex-box" rx="5" style="fill: rgb(5, 150, 105); stroke: rgb(4, 120, 87); stroke-width: 2;"/>
+  <text x="692.761" y="299.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">TraderJoe V2</text>
+  <text x="692.761" y="319.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">LB Router</text>
+  <text x="692.761" y="334.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">swapExactTokensForTokens</text>
+  <rect x="822.761" y="269.842" width="180" height="80" class="dex-box" rx="5" style="fill: rgb(5, 150, 105); stroke: rgb(4, 120, 87); stroke-width: 2;"/>
+  <text x="912.761" y="299.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">Token Contracts</text>
+  <text x="912.761" y="319.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">USDC / WAVAX / WBTC</text>
+  <text x="912.761" y="334.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">ERC20 Operations</text>
+  <rect x="132.76" y="419.842" width="160" height="70" class="utils-box" rx="5" style="fill: rgb(8, 145, 178); stroke: rgb(14, 116, 144); stroke-width: 2;"/>
+  <text x="212.76" y="449.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">GasUtility</text>
+  <text x="212.76" y="469.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Gas Optimization</text>
+  <rect x="322.761" y="419.842" width="160" height="70" class="utils-box" rx="5" style="fill: rgb(8, 145, 178); stroke: rgb(14, 116, 144); stroke-width: 2;"/>
+  <text x="402.761" y="449.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">TimingUtility</text>
+  <text x="402.761" y="469.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Performance Tracking</text>
+  <rect x="512.761" y="419.842" width="160" height="70" class="utils-box" rx="5" style="fill: rgb(8, 145, 178); stroke: rgb(14, 116, 144); stroke-width: 2;"/>
+  <text x="592.761" y="449.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">Logger</text>
+  <text x="592.761" y="469.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Trade &amp; Error Logs</text>
+  <rect x="732.761" y="419.842" width="180" height="70" class="data-box" rx="5" style="fill: rgb(100, 116, 139); stroke: rgb(71, 85, 105); stroke-width: 2;"/>
+  <text x="822.761" y="449.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">TradeMetricsManager</text>
+  <text x="822.761" y="469.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Performance Analytics</text>
+  <rect x="952.761" y="419.842" width="180" height="70" class="data-box" rx="5" style="fill: rgb(100, 116, 139); stroke: rgb(71, 85, 105); stroke-width: 2;"/>
+  <text x="1042.76" y="449.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">Data Collection</text>
+  <text x="1042.76" y="469.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Quote Accuracy Analysis</text>
+  <rect x="1182.76" y="419.842" width="180" height="70" class="data-box" rx="5" style="fill: rgb(100, 116, 139); stroke: rgb(71, 85, 105); stroke-width: 2;"/>
+  <text x="1272.76" y="449.842" text-anchor="middle" class="text-white" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; line-height: 22.4px; stroke-width: 1;">Constants &amp; Config</text>
+  <text x="1272.76" y="469.842" text-anchor="middle" class="text-small" style="white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Pool Addresses, Settings</text>
+  <path class="arrow" d="M 732.761 -270.16 L 732.761 -230.16 L 332.761 -230.16 L 332.761 -200.16" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 732.761 -270.16 L 732.761 -230.16 L 582.761 -230.16 L 582.761 -200.16" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 732.761 -270.16 L 732.761 -230.16 L 832.761 -230.16 L 832.761 -200.16" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 732.761 -270.16 L 732.761 -230.16 L 1082.76 -230.16 L 1082.76 -200.16" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 282.761 -120.16 L 282.761 -80.158 L 222.76 -80.158 L 222.76 -50.158" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 382.761 -120.16 L 382.761 -80.158 L 442.761 -80.158 L 442.761 -50.158" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 582.761 -120.16 L 582.761 69.842 L 732.761 69.842 L 732.761 99.842" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 832.761 -120.16 L 832.761 69.842 L 732.761 69.842 L 732.761 99.842" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="flash-arrow" d="M 1082.76 -120.16 L 1082.76 99.842" style="fill: none; marker-end: url(&quot;#flash-arrowhead&quot;); stroke: rgb(234, 88, 12); stroke-dasharray: 5px, 5px; stroke-width: 2;"/>
+  <path class="flash-arrow" d="M 982.761 139.842 L 882.761 139.842" style="fill: none; marker-end: url(&quot;#flash-arrowhead&quot;); stroke: rgb(234, 88, 12); stroke-dasharray: 5px, 5px; stroke-width: 2;"/>
+  <path class="flash-arrow" d="M 882.761 149.842 L 982.761 149.842" style="fill: none; marker-end: url(&quot;#flash-arrowhead&quot;); stroke: rgb(234, 88, 12); stroke-dasharray: 5px, 5px; stroke-width: 2;"/>
+  <path class="arrow" d="M 682.761 199.842 L 682.761 239.842 L 472.761 239.842 L 472.761 269.842" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 732.761 199.842 L 732.761 239.842 L 692.761 239.842 L 692.761 269.842" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="arrow" d="M 782.761 199.842 L 782.761 239.842 L 912.761 239.842 L 912.761 269.842" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <path class="data-arrow" d="M 582.761 -120.16 L 582.761 389.842 L 212.76 389.842 L 212.76 419.842" style="fill: none; marker-end: url(&quot;#data-arrowhead&quot;); stroke: rgb(100, 116, 139); stroke-dasharray: 3px, 3px; stroke-width: 1;"/>
+  <path class="data-arrow" d="M 632.761 -120.16 L 632.761 389.842 L 402.761 389.842 L 402.761 419.842" style="fill: none; marker-end: url(&quot;#data-arrowhead&quot;); stroke: rgb(100, 116, 139); stroke-dasharray: 3px, 3px; stroke-width: 1;"/>
+  <path class="data-arrow" d="M 682.761 -120.16 L 682.761 389.842 L 592.761 389.842 L 592.761 419.842" style="fill: none; marker-end: url(&quot;#data-arrowhead&quot;); stroke: rgb(100, 116, 139); stroke-dasharray: 3px, 3px; stroke-width: 1;"/>
+  <path class="data-arrow" d="M 732.761 -120.16 L 732.761 389.842 L 822.761 389.842 L 822.761 419.842" style="fill: none; marker-end: url(&quot;#data-arrowhead&quot;); stroke: rgb(100, 116, 139); stroke-dasharray: 3px, 3px; stroke-width: 1;"/>
+  <text x="132.76" y="569.842" class="legend-text" style="font-weight: bold; white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Trade Execution Flow:</text>
+  <circle cx="152.76" cy="599.842" r="15" fill="#2563eb" style="stroke-width: 1;"/>
+  <text x="150.76" y="604.842" class="text-white" style="font-size: 11px; white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-weight: 700; stroke-width: 1;">1</text>
+  <text x="177.76" y="604.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Monitor prices on both DEXs (parallel quotes)</text>
+  <circle cx="152.76" cy="639.842" r="15" fill="#7c3aed" style="stroke-width: 1;"/>
+  <text x="150.76" y="644.842" class="text-white" style="font-size: 11px; white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-weight: 700; stroke-width: 1;">2</text>
+  <text x="177.76" y="644.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Identify arbitrage opportunity (USDC→WAVAX/WBTC→USDC)</text>
+  <circle cx="152.76" cy="679.842" r="15" fill="#ea580c" style="stroke-width: 1;"/>
+  <text x="150.76" y="684.842" class="text-white" style="font-size: 11px; white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-weight: 700; stroke-width: 1;">3</text>
+  <text x="177.76" y="684.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Request flash loan from Balancer V2 (0% fee)</text>
+  <circle cx="152.76" cy="719.842" r="15" fill="#dc2626" style="stroke-width: 1;"/>
+  <text x="150.76" y="724.842" class="text-white" style="font-size: 11px; white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-weight: 700; stroke-width: 1;">4</text>
+  <text x="177.76" y="724.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Execute atomic swap: Buy low on DEX1, Sell high on DEX2</text>
+  <circle cx="152.76" cy="759.842" r="15" fill="#059669" style="stroke-width: 1;"/>
+  <text x="150.76" y="764.842" class="text-white" style="font-size: 11px; white-space: pre; fill: rgb(255, 255, 255); font-family: Arial, sans-serif; font-weight: 700; stroke-width: 1;">5</text>
+  <text x="177.76" y="764.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Repay flash loan + keep profit</text>
+  <rect x="632.761" y="569.842" width="400" height="200" fill="none" stroke="#64748b" stroke-width="1" rx="5" style="stroke-width: 1;"/>
+  <text x="832.761" y="594.842" text-anchor="middle" class="legend-text" style="font-weight: bold; font-size: 14px; white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; stroke-width: 1;">Key Features</text>
+  <text x="652.761" y="619.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">✓ Balancer V2 Flash Loans (0% fee)</text>
+  <text x="652.761" y="644.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">✓ Multi-token support (USDC, WAVAX, WBTC)</text>
+  <text x="652.761" y="669.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">✓ Atomic execution (all-or-nothing)</text>
+  <text x="652.761" y="694.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">✓ Parallel price fetching for speed</text>
+  <text x="652.761" y="719.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">✓ Gas optimization &amp; dynamic pricing</text>
+  <text x="652.761" y="744.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">✓ Comprehensive error handling &amp; recovery</text>
+  <rect x="1082.76" y="569.842" width="280" height="138.486" fill="none" stroke="#059669" stroke-width="1" rx="5" style="stroke-width: 1;"/>
+  <text x="1222.76" y="594.842" text-anchor="middle" class="legend-text" style="font-weight: bold; font-size: 14px; white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; stroke-width: 1;">Supported Trading Pairs</text>
+  <text x="1102.76" y="619.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">• USDC ↔ WAVAX (Uniswap V3)</text>
+  <text x="1102.76" y="644.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">• USDC ↔ WAVAX (TraderJoe V2)</text>
+  <text x="1102.76" y="669.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">• USDC ↔ WBTC (Uniswap V3)</text>
+  <text x="1102.76" y="694.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">• USDC ↔ WBTC (TraderJoe V2)</text>
+  <text x="132.76" y="829.842" class="legend-text" style="font-weight: bold; white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Arrow Types:</text>
+  <line x1="132.76" y1="854.842" x2="182.76" y2="854.842" class="arrow" style="fill: none; marker-end: url(&quot;#arrowhead&quot;); stroke: rgb(51, 65, 85); stroke-width: 2;"/>
+  <text x="192.76" y="859.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Main execution flow</text>
+  <line x1="132.76" y1="879.842" x2="182.76" y2="879.842" class="flash-arrow" style="fill: none; marker-end: url(&quot;#flash-arrowhead&quot;); stroke: rgb(234, 88, 12); stroke-dasharray: 5px, 5px; stroke-width: 2;"/>
+  <text x="192.76" y="884.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Flash loan flow</text>
+  <line x1="132.76" y1="904.842" x2="182.76" y2="904.842" class="data-arrow" style="fill: none; marker-end: url(&quot;#data-arrowhead&quot;); stroke: rgb(100, 116, 139); stroke-dasharray: 3px, 3px; stroke-width: 1;"/>
+  <text x="192.76" y="909.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">Data/utility connections</text>
+  <rect x="632.761" y="829.842" width="400" height="100" fill="#f0fdf4" stroke="#16a34a" stroke-width="2" rx="5" style="stroke-width: 2;"/>
+  <text x="832.761" y="854.842" text-anchor="middle" style="font-weight: bold; font-size: 14px; fill: rgb(22, 163, 74); white-space: pre; stroke-width: 1;">System Status</text>
+  <text x="652.761" y="879.842" style="fill: rgb(22, 163, 74); white-space: pre; font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; perspective-origin: 310px 665px; stroke-width: 1;" class="legend-text">✅ Phase 1.6: WBTC Integration Complete</text>
+  <text x="652.761" y="904.842" style="fill: rgb(22, 163, 74); white-space: pre; font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; perspective-origin: 310px 677.5px; stroke-width: 1;" class="legend-text">✅ Balancer V2 Flash Loans Active</text>
+  <rect x="1082.76" y="729.842" width="280" height="120" fill="#fef3c7" stroke="#f59e0b" stroke-width="1" rx="5" style="stroke-width: 1;"/>
+  <text x="1222.76" y="754.842" text-anchor="middle" class="legend-text" style="font-weight: bold; font-size: 14px; white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; stroke-width: 1;">Performance Optimizations</text>
+  <text x="1102.76" y="779.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">• Gas-optimized contract &lt;24KB</text>
+  <text x="1102.76" y="804.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; stroke-width: 1;">• Parallel quote fetching</text>
+  <text x="1102.76" y="829.842" class="legend-text" style="white-space: pre; fill: rgb(51, 65, 85); font-family: Arial, sans-serif; font-size: 12px; line-height: 19.2px; perspective-origin: 535px 640px; stroke-width: 1;">• Cached gas prices (10s TTL)</text>
+</svg>

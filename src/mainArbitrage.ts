@@ -336,9 +336,9 @@ async function checkBalance(arbitrageService: ArbitrageService): Promise<boolean
             (baseGasPrice *
                 BigInt(Math.floor(GAS_OPTIMIZATION.BASE_FEE_MULTIPLIER * 100))) /
             100n;
-        const estimatedGasCost = adjustedGasPrice * GAS_OPTIMIZATION.ESTIMATOR.SWAP_BASE;
+        const estimatedGasCost = adjustedGasPrice * GAS_OPTIMIZATION.SWAP_BASE;
         const maxGasCost = BigInt(
-            Math.ceil(Number(estimatedGasCost) * GAS_OPTIMIZATION.ESTIMATOR.BUFFER_MULTIPLIER)
+            Math.ceil(Number(estimatedGasCost) * GAS_OPTIMIZATION.BUFFER_MULTIPLIER)
         );
         const minRequired = maxGasCost * 3n;
 

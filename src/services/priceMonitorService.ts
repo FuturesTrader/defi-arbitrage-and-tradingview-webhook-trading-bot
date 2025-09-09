@@ -614,7 +614,7 @@ export class PriceMonitorService {
 
             // Create standardized structure
             return {
-                estimatedGasUsed: GAS_OPTIMIZATION.ESTIMATOR.SWAP_BASE.toString(),
+                estimatedGasUsed: GAS_OPTIMIZATION.SWAP_BASE.toString(),
                 totalGasCostUSDC: gasCostUSDC,
                 effectiveGasPrice: (await this.getGasPrice()).toString()
             };
@@ -625,7 +625,7 @@ export class PriceMonitorService {
 
             // Return fallback values if estimation fails
             return {
-                estimatedGasUsed: GAS_OPTIMIZATION.ESTIMATOR.SWAP_BASE.toString(),
+                estimatedGasUsed: GAS_OPTIMIZATION.SWAP_BASE.toString(),
                 totalGasCostUSDC: 0.01, // Conservative default
                 effectiveGasPrice: '0'
             };
