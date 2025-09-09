@@ -6,6 +6,7 @@ typechain-types/
 abis/
 trade_data/
 transaction_data/
+webhook_guidebook/
 
 # Dependencies
 node_modules/
