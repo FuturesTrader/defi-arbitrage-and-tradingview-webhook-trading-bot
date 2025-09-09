@@ -7,6 +7,7 @@ abis/
 trade_data/
 transaction_data/
 webhook_guidebook/
+config/
 
 # Dependencies
 node_modules/
