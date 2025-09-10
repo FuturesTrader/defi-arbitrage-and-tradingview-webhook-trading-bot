@@ -6,33 +6,65 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-
-/// @title Balancer V3 Flash Loan Interface
-interface IBalancerVault {
-    function unlock(bytes calldata data) external returns (bytes memory);
-    function sendTo(IERC20 token, address to, uint256 amount) external;
-    function settle(IERC20 token, uint256 amount) external;
-}
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /// Custom Errors - Consolidated to reduce bytecode
     error InvalidSetup(uint8 code);
     error TradeErrors(uint8 code, string reason);
     error FlashLoanErrors(uint8 code);
+    error InvalidTokens();                   // Replaces TradeErrors(1, "")
+    error ZeroAmount();                      // Replaces FlashLoanErrors(1)
+    error InvalidVaultAddress();             // Replaces InvalidSetup(1)
+    error DisabledToken();                   // Replaces TradeErrors(2, "")
+    error UnauthorizedCaller();              // Replaces FlashLoanErrors(2)
+    error InvalidExecutionId();              // Replaces TradeErrors(3, "")
+    error FirstSwapFailed(string reason);    // Replaces TradeErrors(4, reason)
+    error NoIntermediateTokens();            // Replaces TradeErrors(5, "")
+    error SecondSwapFailed(string reason);   // Replaces TradeErrors(6, reason)
+    error InsufficientProfit();              // Replaces TradeErrors(7, "")
+    error InsufficientRepayment();           // Replaces FlashLoanErrors(4)
+    error TestModeShortfall();               // Replaces FlashLoanErrors(5)
+    error NegativeValueConversion();         // New error for int256 to uint256 conversion
+    error SafeCastFailure();                 // New error for SafeCast failures
+
+// Balancer V2 Interfaces - Simplified to avoid import conflicts
+interface IFlashLoanRecipient {
+    function receiveFlashLoan(
+        IERC20[] memory tokens,
+        uint256[] memory amounts,
+        uint256[] memory feeAmounts,
+        bytes memory userData
+    ) external;
+}
+
+interface IVault {
+    function flashLoan(
+        IFlashLoanRecipient recipient,
+        IERC20[] memory tokens,
+        uint256[] memory amounts,
+        bytes memory userData
+    ) external;
+}
 
 /**
- * @title CrossDexArbitrageWithFlashLoan
- * @notice Executes arbitrage between DEXes using Balancer V3 flash loans
- * @dev Optimized for reduced gas usage and contract size
+ * @title CrossDexArbitrageWithBalancerV2
+ * @notice Executes arbitrage between DEXes using Balancer V2 flash loans
+ * @dev Implements IFlashLoanRecipient for Balancer V2 flash loans
  */
-contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
+contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable, IFlashLoanRecipient {
     using SafeERC20 for IERC20;
+    using SafeCast for int256;
+    using SafeCast for uint256;
 
     // Constants - using immutable where possible to save gas
     uint256 private constant MAX_BPS = 10000; // 100%
     uint256 private constant MAX_GAS_FOR_CALL = 3000000;
+    // Define max and min int256 values for checks
+    int256 private constant MAX_INT256 = type(int256).max;
+    int256 private constant MIN_INT256 = type(int256).min;
 
     // Main contract addresses
-    address public immutable balancerVaultAddress;
+    IVault public immutable balancerVault;
     address public uniswapRouterAddress;
     address public traderJoeRouterAddress;
 
@@ -56,8 +88,8 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         address firstRouter;
         address secondRouter;
         bool testMode;
-        uint256 expectedFirstOutput;
-        uint256 expectedSecondOutput;
+        int256 expectedFirstOutput;  // Keep as int256 for potential negative values
+        int256 expectedSecondOutput; // Keep as int256 for potential negative values
         bytes32 executionId;
     }
 
@@ -83,11 +115,11 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         uint256 targetTokenStartBalance;
         uint256 tradeInputAmount;
         uint256 intermediateTokenAmount;
-        int256 tradeFinalBalance;
-        int256 expectedFirstLegOutput;
-        int256 actualFirstLegOutput;
-        int256 expectedSecondLegOutput;
-        int256 actualSecondLegOutput;
+        int256 tradeFinalBalance;  // Can be negative in test mode
+        int256 expectedFirstLegOutput; // Keep as int256
+        uint256 actualFirstLegOutput;  // Changed to uint256 as actual values can't be negative
+        int256 expectedSecondOutput; // Keep as int256
+        int256 actualSecondOutput;  // Can be negative in test mode
         bool executed;
     }
 
@@ -95,14 +127,14 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
     struct FlashLoanContext {
         address sourceToken;
         address targetToken;
-        uint256 amount;
+        uint256 amount; // Changed to uint256 to match external interaction
         bytes firstSwapData;
         bytes secondSwapData;
         address firstRouter;
         address secondRouter;
         bool testMode;
-        uint256 expectedFirstOutput;
-        uint256 expectedSecondOutput;
+        int256 expectedFirstOutput;  // Keep as int256
+        int256 expectedSecondOutput; // Keep as int256
         bytes32 executionId;
     }
 
@@ -119,11 +151,11 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         uint256 totalExecutions;
         uint256 successfulExecutions;
         uint256 failedExecutions;
-        uint256 totalProfit;
+        uint256 totalProfit; // Changed to uint256 to only track positive profit
         uint256 flashLoanExecutions;
         uint256 flashLoanSuccessful;
         uint256 flashLoanFailed;
-        uint256 flashLoanProfit;
+        uint256 flashLoanProfit; // Changed to uint256 to only track positive profit
     }
     Metrics public metrics;
 
@@ -138,9 +170,9 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         address indexed targetToken,
         uint256 tradeInputAmount,           // Amount used for this specific trade
         uint256 finalAccountBalance,        // Total account balance after trade
-        int256 tradeFinalBalance,           // Final balance for this specific trade
-        int256 tradeProfit,                 // Profit for this specific trade
-        int256 expectedProfit,              // Expected profit based on quotes
+        int256 tradeFinalBalance,           // Final balance for this specific trade (can be negative)
+        int256 tradeProfit,                 // Profit for this specific trade (can be negative)
+        int256 expectedProfit,              // Expected profit based on quotes (can be negative)
         bool testMode
     );
 
@@ -151,24 +183,46 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         uint8 eventType,  // 1=initiated, 2=completed, 3=checkpoint
         string stage,
         address token,
-        uint256 actualBalance,
-        uint256 expectedBalance
+        uint256 actualBalance, // Changed to uint256 for consistency with token balances
+        uint256 expectedBalance // Changed to uint256 for consistency
     );
     event FlashLoanEvent(
         bytes32 indexed executionId,
         uint8 eventType,    // 1=initiated, 2=completed, 3=failed
         address token,
-        uint256 amount,
-        uint256 feeOrProfit  // Fee for initiated, profit for completed
+        uint256 amount,     // Changed to uint256 for consistency with token amounts
+        int256 feeOrProfit  // Keep as int256 to handle negative profit in test mode
     );
 
     /**
      * @notice Contract constructor
-     * @param _balancerVaultAddress The address of the Balancer V3 Vault contract
+     * @param _balancerVaultAddress The address of the Balancer V2 Vault contract
      */
     constructor(address _balancerVaultAddress) {
-        if (_balancerVaultAddress == address(0)) revert InvalidSetup(1);
-        balancerVaultAddress = _balancerVaultAddress;
+        if (_balancerVaultAddress == address(0)) revert InvalidVaultAddress();
+        balancerVault = IVault(_balancerVaultAddress);
+    }
+
+    /**
+     * @notice Safely convert int256 to uint256, reverting on negative values
+     * @param value The int256 value to convert
+     * @return The uint256 value
+     */
+    function safeToUint256(int256 value) internal pure returns (uint256) {
+        if (value < 0) revert NegativeValueConversion();
+        return uint256(value);
+    }
+
+    /**
+     * @notice Safely convert uint256 to int256, with overflow check
+     * @param value The uint256 value to convert
+     * @return The int256 value
+     */
+    function safeToInt256(uint256 value) internal pure returns (int256) {
+        if (value > uint256(type(int256).max)) {
+            return MAX_INT256;
+        }
+        return int256(value);
     }
 
     /**
@@ -255,18 +309,18 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Executes a flash loan-based arbitrage using Balancer V3
-     * @param sourceToken Token to borrow in the flash loan
-     * @param targetToken Intermediate token used in the arbitrage
-     * @param amount Amount to borrow
-     * @param firstSwapData Calldata for the first swap
-     * @param secondSwapData Calldata for the second swap
-     * @param firstRouter Address of the first DEX router
-     * @param secondRouter Address of the second DEX router
-     * @param testMode Whether to run in test mode (allows negative profit)
-     * @param expectedFirstOutput Expected output from the first swap
-     * @param expectedSecondOutput Expected output from the second swap
-     * @return finalBalance The final balance after the arbitrage
+     * @notice Execute flash loan arbitrage between DEXes using Balancer V2
+     * @param sourceToken The token to borrow via flash loan
+     * @param targetToken The token to swap to and back
+     * @param amount Amount of sourceToken to borrow
+     * @param firstSwapData Encoded swap data for first DEX
+     * @param secondSwapData Encoded swap data for second DEX
+     * @param firstRouter Address of first DEX router
+     * @param secondRouter Address of second DEX router
+     * @param testMode Whether to execute in test mode (allows negative profit)
+     * @param expectedFirstOutput Expected output from first swap
+     * @param expectedSecondOutput Expected output from second swap
+     * @return Profit amount or actual second leg output in test mode
      */
     function executeFlashLoanArbitrage(
         address sourceToken,
@@ -277,14 +331,25 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         address firstRouter,
         address secondRouter,
         bool testMode,
-        uint256 expectedFirstOutput,
-        uint256 expectedSecondOutput
+        int256 expectedFirstOutput,
+        int256 expectedSecondOutput
     ) external nonReentrant whenNotPaused returns (uint256) {
         // Validations
-        if (sourceToken == targetToken) revert TradeErrors(1, "");
-        if (amount == 0) revert FlashLoanErrors(1);
-        if (balancerVaultAddress == address(0)) revert InvalidSetup(1);
-        if (!tokenConfigs[sourceToken].isEnabled) revert TradeErrors(2, "");
+        if (sourceToken == targetToken) revert InvalidTokens();
+        if (amount == 0) revert ZeroAmount();
+        if (address(balancerVault) == address(0)) revert InvalidVaultAddress();
+        if (!tokenConfigs[sourceToken].isEnabled) revert DisabledToken();
+
+        // Log expected values for diagnostics
+        emit StateLog(
+            bytes32(0),
+            "ExpectedValues",
+            string(abi.encodePacked(
+                "First: ", int2str(expectedFirstOutput),
+                ", Second: ", int2str(expectedSecondOutput),
+                ", TestMode: ", testMode ? "true" : "false"
+            ))
+        );
 
         // Create execution ID
         bytes32 executionId = keccak256(
@@ -316,6 +381,7 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             executionId: executionId
         });
 
+        // Log when flash loan starts
         emit FlashLoanEvent(
             executionId,
             1,  // initiated
@@ -324,43 +390,138 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             0    // No fee for Balancer flash loans
         );
 
-        // Call Balancer Vault to unlock and execute flash loan
-        IBalancerVault(balancerVaultAddress).unlock(
-            abi.encodeWithSelector(this.onFlashLoan.selector, abi.encode(executionId))
-        );
+        // Track pre-call token balance for verification
+        uint256 preCallBalance = IERC20(sourceToken).balanceOf(address(this));
 
-        // Get final balance after flash loan
-        metrics.flashLoanExecutions++;
-        uint256 finalBalance = IERC20(sourceToken).balanceOf(address(this));
-        return finalBalance;
+        // Pack the execution ID as userData for the callback
+        bytes memory userData = abi.encode(executionId);
+
+        // Set up token array and amount array for the flash loan
+        IERC20[] memory tokens = new IERC20[](1);
+        tokens[0] = IERC20(sourceToken);
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+
+        // Execute the flash loan with Balancer V2
+        try balancerVault.flashLoan(
+            this,
+            tokens,
+            amounts,
+            userData
+        ) {
+            // Successfully completed flash loan
+            metrics.flashLoanExecutions++;
+            metrics.flashLoanSuccessful++;
+
+            uint256 finalBalance = IERC20(sourceToken).balanceOf(address(this));
+
+            // Log balance change
+            emit StateLog(
+                executionId,
+                "BalanceChange",
+                string(abi.encodePacked(
+                    "Pre: ", uint2str(preCallBalance),
+                    ", Post: ", uint2str(finalBalance)
+                ))
+            );
+
+            // Log completion of flash loan
+            emit StateLog(executionId, "FlashLoanComplete", "Success");
+
+            return finalBalance;
+        } catch Error(string memory reason) {
+            // Standard error with reason
+            emit StateLog(executionId, "FlashLoanError", reason);
+            metrics.flashLoanFailed++;
+            metrics.flashLoanExecutions++;
+
+            // Clean up flash loan context on error
+            delete flashLoanContexts[executionId];
+
+            // Return current balance even on error
+            return IERC20(sourceToken).balanceOf(address(this));
+        } catch Panic(uint errorCode) {
+            // Handle Solidity's built-in panic errors
+            string memory panicReason;
+            if (errorCode == 0x01) panicReason = "Assertion failed";
+            else if (errorCode == 0x11) panicReason = "Arithmetic operation underflow or overflow";
+            else if (errorCode == 0x12) panicReason = "Division or modulo by zero";
+            else if (errorCode == 0x21) panicReason = "Invalid enum value";
+            else if (errorCode == 0x22) panicReason = "Storage byte array is incorrectly encoded";
+            else if (errorCode == 0x31) panicReason = "calldata is too short";
+            else if (errorCode == 0x32) panicReason = "Return data too short";
+            else if (errorCode == 0x41) panicReason = "Invalid array length";
+            else if (errorCode == 0x51) panicReason = "Invalid memory array access";
+            else panicReason = string(abi.encodePacked("Unknown panic code: ", uint2str(errorCode)));
+
+            emit StateLog(executionId, "FlashLoanPanic", panicReason);
+            metrics.flashLoanFailed++;
+            metrics.flashLoanExecutions++;
+
+            // Clean up flash loan context on error
+            delete flashLoanContexts[executionId];
+
+            // Return current balance even on error
+            return IERC20(sourceToken).balanceOf(address(this));
+        } catch (bytes memory errorData) {
+            // Handle low-level errors
+            string memory errorMsg = "Unknown error";
+            if (errorData.length > 0) {
+                // Try to extract error signature
+                bytes4 errorSig;
+                assembly {
+                    errorSig := mload(add(errorData, 32))
+                }
+                errorMsg = string(abi.encodePacked("Error sig: ", bytes4ToString(errorSig)));
+            }
+
+            emit StateLog(executionId, "FlashLoanLowLevelError", errorMsg);
+            metrics.flashLoanFailed++;
+            metrics.flashLoanExecutions++;
+
+            // Clean up flash loan context on error
+            delete flashLoanContexts[executionId];
+
+            // Return current balance even on error
+            return IERC20(sourceToken).balanceOf(address(this));
+        }
     }
 
     /**
-     * @notice Balancer flash loan callback function
-     * @dev Called by Balancer Vault during the flash loan
-     * @param data Encoded execution ID and parameters
+     * @notice Balancer V2 flash loan callback function
+     * @dev Called by the Balancer Vault during flash loan
+     * @param amounts Array of amounts that were borrowed
+     * @param feeAmounts Array of fee amounts to be paid
+     * @param userData User data passed to the flash loan function (contains executionId)
      */
-    function onFlashLoan(bytes memory data) external {
+    function receiveFlashLoan(
+        IERC20[] memory,
+        uint256[] memory amounts,
+        uint256[] memory feeAmounts,
+        bytes memory userData
+    ) external override {
         // Verify caller is the Balancer Vault
-        if (msg.sender != balancerVaultAddress) {
-            revert FlashLoanErrors(2);
-        }
+        if (msg.sender != address(balancerVault)) revert UnauthorizedCaller();
 
-        // Decode the execution ID
-        bytes32 executionId = abi.decode(data, (bytes32));
+        // Decode executionId from userData
+        bytes32 executionId = abi.decode(userData, (bytes32));
 
         // Retrieve the context
         FlashLoanContext memory context = flashLoanContexts[executionId];
         if (context.executionId != executionId) {
             emit StateLog(executionId, "ContextRetrieval", "Invalid");
-            revert TradeErrors(3, "");
+            revert InvalidExecutionId();
         }
 
-        // Borrow funds from Balancer Vault
-        IBalancerVault(balancerVaultAddress).sendTo(
-            IERC20(context.sourceToken),
-            address(this),
-            context.amount
+        // Log callback start
+        emit StateLog(
+            executionId,
+            "FlashLoanCallback",
+            string(abi.encodePacked(
+                "Starting callback, token: ", addressToString(context.sourceToken),
+                ", amount: ", uint2str(context.amount)
+            ))
         );
 
         // Execute the arbitrage
@@ -375,7 +536,7 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             secondSwapData: context.secondSwapData,
             firstRouter: context.firstRouter,
             secondRouter: context.secondRouter,
-            testMode: true,  // Always use test mode for flash loans
+            testMode: context.testMode,
             expectedFirstOutput: context.expectedFirstOutput,
             expectedSecondOutput: context.expectedSecondOutput,
             executionId: executionId
@@ -384,16 +545,31 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             arbitrageSuccess = true;
             emit StateLog(executionId, "ArbitrageExecution", "Success");
         } catch Error(string memory reason) {
-            // Get the string error
-            emit StateLog(executionId, "ArbitrageExecution", string(abi.encodePacked("Failed: ", reason)));
-
+            // Log the exact error
+            emit StateLog(executionId, "ArbitrageExecutionError", reason);
             // Update trade context to record the failure
             TradeContext storage tradeContext = tradeContexts[executionId];
             tradeContext.executed = false;
-        } catch (bytes memory) {
-            // Catch any other error
-            emit StateLog(executionId, "ArbitrageExecution", "Failed with unknown error");
-
+        } catch Panic(uint errorCode) {
+            // Add this to catch arithmetic errors (0x11 is arithmetic error code)
+            string memory errorType = errorCode == 0x11 ? "Arithmetic operation" :
+                errorCode == 0x01 ? "Assert failed" :
+                    errorCode == 0x12 ? "Division by zero" : "Other panic";
+            emit StateLog(executionId, "ArithmeticError", errorType);
+            TradeContext storage tradeContext = tradeContexts[executionId];
+            tradeContext.executed = false;
+        } catch (bytes memory errorData) {
+            // Catch any other error and try to extract useful information
+            string memory errorMsg = "Unknown error";
+            if (errorData.length > 0) {
+                // Try to extract error signature
+                bytes4 errorSig;
+                assembly {
+                    errorSig := mload(add(errorData, 32))
+                }
+                errorMsg = string(abi.encodePacked("Error sig: ", bytes4ToString(errorSig)));
+            }
+            emit StateLog(executionId, "ArbitrageExecution", string(abi.encodePacked("Failed with error: ", errorMsg)));
             // Update trade context
             TradeContext storage tradeContext = tradeContexts[executionId];
             tradeContext.executed = false;
@@ -401,31 +577,90 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
 
         // Record flash loan metrics
         if (arbitrageSuccess) {
-            metrics.flashLoanSuccessful++;
+            // Safe conversion: only add to metrics if profit is positive
             if (profit > 0) {
-                // Convert positive int256 to uint256 before adding to totalProfit
-                metrics.flashLoanProfit += profit > 0 ? uint256(profit) : 0;
+                // Only add positive profits to metrics
+                metrics.flashLoanProfit += uint256(profit);
+            } else {
+                emit StateLog(executionId, "MetricsWarning", "Profit not added to metrics (negative)");
             }
-        } else {
-            metrics.flashLoanFailed++;
         }
 
-        // Repay the flash loan to Balancer
-        uint256 repayAmount = context.amount;
-        IERC20(context.sourceToken).transfer(balancerVaultAddress, repayAmount);
-        IBalancerVault(balancerVaultAddress).settle(IERC20(context.sourceToken), repayAmount);
+        // Calculate the total repayment amount (principal + fees)
+        uint256 repayAmount = amounts[0] + feeAmounts[0];
 
-        // Emit event with results
+        // Ensure we have enough to repay
+        uint256 currentBalance = IERC20(context.sourceToken).balanceOf(address(this));
+
+        emit StateLog(
+            executionId,
+            "RepaymentInfo",
+            string(abi.encodePacked(
+                "Principal: ", uint2str(amounts[0]),
+                ", Fee: ", uint2str(feeAmounts[0]),
+                ", Total: ", uint2str(repayAmount),
+                ", Balance: ", uint2str(currentBalance)
+            ))
+        );
+
+        if (currentBalance < repayAmount) {
+            if (context.testMode) {
+                // In test mode, try to cover shortfall from owner's funds
+                try IERC20(context.sourceToken).transferFrom(owner(), address(this), repayAmount - currentBalance) {
+                    emit StateLog(executionId, "TestModeShortfall", "Covered by owner");
+                } catch {
+                    emit StateLog(executionId, "TestModeShortfall", "Failed to cover");
+                    revert TestModeShortfall();
+                }
+            } else {
+                emit StateLog(executionId, "InsufficientBalance", "Cannot repay flash loan");
+                revert InsufficientRepayment();
+            }
+        }
+
+        // Repay the flash loan
+        IERC20(context.sourceToken).transfer(address(balancerVault), repayAmount);
+
+        // Emit event with results before cleanup
         emit FlashLoanEvent(
             executionId,
             2,  // completed
             context.sourceToken,
             context.amount,
-            profit > 0 ? uint256(profit) : 0  // Convert to uint256 for event
+            profit  // Can be negative in test mode
         );
 
-        // Clean up context
+        // Clean up flash loan context
         delete flashLoanContexts[executionId];
+    }
+
+    /**
+     * @notice Helper function to convert bytes4 to string for error logging
+     */
+    function bytes4ToString(bytes4 _bytes) internal pure returns (string memory) {
+        bytes memory bytesArray = new bytes(10);
+
+        bytesArray[0] = '0';
+        bytesArray[1] = 'x';
+
+        for (uint256 i = 0; i < 4; i++) {
+            uint8 byteValue = uint8(_bytes[i]);
+            bytesArray[2 + i*2] = toHexChar(byteValue / 16);
+            bytesArray[3 + i*2] = toHexChar(byteValue % 16);
+        }
+
+        return string(bytesArray);
+    }
+
+    /**
+     * @notice Helper function to convert a nibble to hex character
+     */
+    function toHexChar(uint8 nibble) internal pure returns (bytes1) {
+        if (nibble < 10) {
+            return bytes1(uint8(bytes1('0')) + nibble);
+        } else {
+            return bytes1(uint8(bytes1('a')) + nibble - 10);
+        }
     }
 
     /**
@@ -435,12 +670,13 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
      */
     function executeArbitrageInternal(ArbitrageParams memory params) internal returns (int256) {
         if (executedTrades[params.executionId]) {
-            revert TradeErrors(3, "");
+            revert InvalidExecutionId();
         }
         executedTrades[params.executionId] = true;
 
         // Initialize trade context
         TradeContext storage tradeContext = tradeContexts[params.executionId];
+        tradeContext.executed = false; // Will be set to true at the end if successful
 
         // 1) Record initial account-wide balances
         uint256 initialAccountBalance = IERC20(params.sourceToken).balanceOf(address(this));
@@ -450,8 +686,22 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         tradeContext.sourceTokenStartBalance = initialAccountBalance;
         tradeContext.targetTokenStartBalance = initialTargetBalance;
         tradeContext.tradeInputAmount = params.amount;
-        tradeContext.expectedFirstLegOutput = int256(params.expectedFirstOutput);  // Convert to int256
-        tradeContext.expectedSecondLegOutput = int256(params.expectedSecondOutput);  // Convert to int256
+
+        // Store expected outputs - using direct assignment for int256 values
+        tradeContext.expectedFirstLegOutput = params.expectedFirstOutput;
+        tradeContext.expectedSecondOutput = params.expectedSecondOutput;
+
+        // Log the input context for better error analysis
+        emit StateLog(
+            params.executionId,
+            "InputContext",
+            string(abi.encodePacked(
+                "Amount: ", uint2str(params.amount),
+                ", Expected1: ", int2str(params.expectedFirstOutput),
+                ", Expected2: ", int2str(params.expectedSecondOutput),
+                ", TestMode: ", params.testMode ? "true" : "false"
+            ))
+        );
 
         // Record checkpoint before first swap
         emit SwapEvent(
@@ -464,10 +714,25 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         );
 
         // 2) Approve first router if needed
-        uint256 currentAllowanceFirst = IERC20(params.sourceToken).allowance(address(this), params.firstRouter);
+        uint256 currentAllowanceFirst = IERC20(params.sourceToken)
+            .allowance(address(this), params.firstRouter);
+
         if (currentAllowanceFirst < params.amount) {
             _safeApprove(params.sourceToken, params.firstRouter, type(uint256).max);
             emit StateLog(params.executionId, "FirstRouterApproval", "Updated");
+        }
+
+        // Safely convert expected first output for the event
+        uint256 expectedFirstOutputForEvent;
+        if (params.expectedFirstOutput > 0) {
+            expectedFirstOutputForEvent = uint256(params.expectedFirstOutput);
+        } else {
+            expectedFirstOutputForEvent = 0;
+            emit StateLog(
+                params.executionId,
+                "NegativeExpectedOutput",
+                string(abi.encodePacked("First: ", int2str(params.expectedFirstOutput)))
+            );
         }
 
         // Emit event before first swap
@@ -477,7 +742,7 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             "first",
             params.firstRouter,
             params.amount,
-            params.expectedFirstOutput
+            expectedFirstOutputForEvent
         );
 
         // 3) First swap
@@ -489,7 +754,7 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
                 errorMsg = string(result1);
             }
             emit StateLog(params.executionId, "FirstSwapError", errorMsg);
-            revert TradeErrors(4, errorMsg);
+            revert FirstSwapFailed(errorMsg);
         }
 
         // Record successful first swap
@@ -497,11 +762,28 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
 
         // 4) Check how many targetTokens we got
         uint256 currentTargetBalance = IERC20(params.targetToken).balanceOf(address(this));
-        uint256 targetTokenReceived = currentTargetBalance - initialTargetBalance;
+        emit StateLog(
+            params.executionId,
+            "FirstSwapBalances",
+            string(abi.encodePacked(
+                "Initial: ", uint2str(initialTargetBalance),
+                ", Current: ", uint2str(currentTargetBalance)
+            ))
+        );
+
+        // Calculate received tokens safely
+        uint256 targetTokenReceived;
+        if (currentTargetBalance > initialTargetBalance) {
+            targetTokenReceived = currentTargetBalance - initialTargetBalance;
+        } else {
+            emit StateLog(params.executionId, "BalanceCheck", "Zero or negative balance change");
+            // We can proceed with zero, but this trade is likely to fail later
+            targetTokenReceived = 0;
+        }
 
         // Store in trade context
         tradeContext.intermediateTokenAmount = targetTokenReceived;
-        tradeContext.actualFirstLegOutput = int256(targetTokenReceived);  // Convert to int256
+        tradeContext.actualFirstLegOutput = targetTokenReceived;
 
         // Record checkpoint after first swap
         emit SwapEvent(
@@ -510,12 +792,12 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             "AfterFirstSwap",
             params.targetToken,
             targetTokenReceived,
-            params.expectedFirstOutput
+            expectedFirstOutputForEvent
         );
 
         if (targetTokenReceived == 0) {
             emit StateLog(params.executionId, "IntermediateTokenReceived", "None");
-            revert TradeErrors(5, "");
+            revert NoIntermediateTokens();
         }
 
         // 5) Approve second router for the entire intermediateBalance
@@ -525,6 +807,19 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             emit StateLog(params.executionId, "SecondRouterApproval", "Updated");
         }
 
+        // Safely convert expected second output for the event
+        uint256 expectedSecondOutputForEvent;
+        if (params.expectedSecondOutput > 0) {
+            expectedSecondOutputForEvent = uint256(params.expectedSecondOutput);
+        } else {
+            expectedSecondOutputForEvent = 0;
+            emit StateLog(
+                params.executionId,
+                "NegativeExpectedOutput",
+                string(abi.encodePacked("Second: ", int2str(params.expectedSecondOutput)))
+            );
+        }
+
         // Emit event before second swap
         emit SwapEvent(
             params.executionId,
@@ -532,7 +827,7 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             "second",
             params.secondRouter,
             targetTokenReceived,
-            params.expectedSecondOutput
+            expectedSecondOutputForEvent
         );
 
         // 6) Second swap
@@ -544,49 +839,176 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
                 errorMsg = string(result2);
             }
             emit StateLog(params.executionId, "SecondSwapError", errorMsg);
-            revert TradeErrors(6, errorMsg);
+            revert SecondSwapFailed(errorMsg);
         }
 
         // Record successful second swap
         emit StateLog(params.executionId, "SecondSwap", "Success");
 
-        // 7) Determine final balances and calculate profit
+        // 7) Determine final balances and calculate profit with safe arithmetic
         uint256 finalAccountBalance = IERC20(params.sourceToken).balanceOf(address(this));
 
-        // Calculate trade-specific final balance
-        int256 sourceTokenReceived = int256(finalAccountBalance) - int256(initialAccountBalance);
-        int256 tradeFinalBalance = int256(params.amount) + sourceTokenReceived;
+        // Log calculation parameters with detail
+        emit StateLog(
+            params.executionId,
+            "BalanceParams",
+            string(abi.encodePacked(
+                "Initial: ", uint2str(initialAccountBalance),
+                ", Final: ", uint2str(finalAccountBalance),
+                ", Input: ", uint2str(params.amount)
+            ))
+        );
 
-        // Store in trade context
+        // Calculate trade profit and final balance
+        int256 tradeProfit; // This can be negative in test mode
+        int256 tradeFinalBalance; // This can be negative in test mode
+
+        // Safe conversion of input amount to int256
+        int256 inputAmountInt = safeToInt256(params.amount);
+
+        // Calculate profit with safe arithmetic
+        if (finalAccountBalance >= initialAccountBalance) {
+            // Positive profit case
+            uint256 rawProfit = finalAccountBalance - initialAccountBalance;
+
+            // Safe conversion to int256
+            if (rawProfit > uint256(type(int256).max)) {
+                emit StateLog(params.executionId, "ProfitOverflow", "Profit too large for int256");
+                tradeProfit = MAX_INT256;
+            } else {
+                tradeProfit = int256(rawProfit);
+                emit StateLog(params.executionId, "ProfitCalculation", string(abi.encodePacked("+", uint2str(rawProfit))));
+            }
+        } else {
+            // Negative profit case (loss)
+            uint256 rawLoss = initialAccountBalance - finalAccountBalance;
+
+            // Safe conversion for negative value
+            if (rawLoss > uint256(type(int256).max)) {
+                emit StateLog(params.executionId, "LossOverflow", "Loss too large for int256");
+                tradeProfit = MIN_INT256;
+            } else {
+                tradeProfit = -int256(rawLoss);
+                emit StateLog(params.executionId, "ProfitCalculation", string(abi.encodePacked("-", uint2str(rawLoss))));
+            }
+        }
+
+        // Safe addition for calculating tradeFinalBalance
+        if (tradeProfit >= 0) {
+            // Check for addition overflow
+            if (MAX_INT256 - tradeProfit < inputAmountInt) {
+                tradeFinalBalance = MAX_INT256;
+                emit StateLog(params.executionId, "FinalBalanceOverflow", "Positive overflow");
+            } else {
+                tradeFinalBalance = inputAmountInt + tradeProfit;
+            }
+        } else {
+            // Check for addition underflow (with negative profit)
+            if (MIN_INT256 - tradeProfit > inputAmountInt) {
+                tradeFinalBalance = MIN_INT256;
+                emit StateLog(params.executionId, "FinalBalanceUnderflow", "Negative overflow");
+            } else {
+                tradeFinalBalance = inputAmountInt + tradeProfit;
+            }
+        }
+
+        // Store calculated values in trade context
         tradeContext.tradeFinalBalance = tradeFinalBalance;
-        tradeContext.actualSecondLegOutput = sourceTokenReceived;
+        tradeContext.actualSecondOutput = tradeProfit;
         tradeContext.executed = true;
 
-        // Record checkpoint after second swap
+        // Calculate expected profit (can be negative in test mode)
+        int256 expectedProfit;
+
+        // Safe arithmetic for expected profit calculation
+        if (params.expectedSecondOutput >= 0 && inputAmountInt >= 0) {
+            // Both positive
+            if (MAX_INT256 - params.expectedSecondOutput < -inputAmountInt) {
+                // Will overflow
+                expectedProfit = MAX_INT256;
+                emit StateLog(params.executionId, "ExpectedProfitCalculationError", "Positive overflow");
+            } else {
+                expectedProfit = params.expectedSecondOutput - inputAmountInt;
+            }
+        } else if (params.expectedSecondOutput < 0 && inputAmountInt < 0) {
+            // Both negative
+            if (MIN_INT256 - params.expectedSecondOutput > -inputAmountInt) {
+                // Will underflow
+                expectedProfit = MIN_INT256;
+                emit StateLog(params.executionId, "ExpectedProfitCalculationError", "Negative overflow");
+            } else {
+                expectedProfit = params.expectedSecondOutput - inputAmountInt;
+            }
+        } else {
+            // Mixed signs
+            if (params.expectedSecondOutput >= 0 && inputAmountInt < 0) {
+                // Expected positive, input negative
+                if (MAX_INT256 - params.expectedSecondOutput < -inputAmountInt) {
+                    // Will overflow
+                    expectedProfit = MAX_INT256;
+                    emit StateLog(params.executionId, "ExpectedProfitCalculationError", "Mixed sign overflow");
+                } else {
+                    expectedProfit = params.expectedSecondOutput - inputAmountInt;
+                }
+            } else {
+                // Expected negative, input positive
+                if (MIN_INT256 - params.expectedSecondOutput > -inputAmountInt) {
+                    // Will underflow
+                    expectedProfit = MIN_INT256;
+                    emit StateLog(params.executionId, "ExpectedProfitCalculationError", "Mixed sign underflow");
+                } else {
+                    expectedProfit = params.expectedSecondOutput - inputAmountInt;
+                }
+            }
+        }
+
+        // Record checkpoint after second swap - safely handle potentially negative trade balance
+        uint256 finalBalanceForEvent;
+        if (tradeFinalBalance > 0) {
+            finalBalanceForEvent = uint256(tradeFinalBalance);
+        } else {
+            finalBalanceForEvent = 0;
+            emit StateLog(params.executionId, "NegativeTradeFinalBalance", int2str(tradeFinalBalance));
+        }
+
         emit SwapEvent(
             params.executionId,
             3,  // checkpoint
             "AfterSecondSwap",
             params.sourceToken,
-            tradeFinalBalance > 0 ? uint256(tradeFinalBalance) : 0,  // Convert to uint256 for event
-            params.expectedSecondOutput
+            finalBalanceForEvent,
+            expectedSecondOutputForEvent
         );
 
-        // Calculate trade-specific profit
-        int256 tradeProfit = tradeFinalBalance - int256(params.amount);
-        int256 expectedProfit = int256(params.expectedSecondOutput) - int256(params.amount);
+        // Log profit details
+        emit StateLog(
+            params.executionId,
+            "ProfitDetails",
+            string(abi.encodePacked(
+                "Actual: ", int2str(tradeProfit),
+                ", Expected: ", int2str(expectedProfit),
+                ", TestMode: ", params.testMode ? "true" : "false"
+            ))
+        );
 
+        // Profit validation
         if (tradeProfit > 0) {
             // Update contract stats for successful profitable trades
             metrics.successfulExecutions++;
-            // Convert positive int256 to uint256 before adding to totalProfit
-            metrics.totalProfit += uint256(tradeProfit);
+
+            // Safe conversion for metrics - only add positive profit
+            if (tradeProfit > 0) {
+                metrics.totalProfit += uint256(tradeProfit);
+            } else {
+                emit StateLog(params.executionId, "MetricsUpdateWarning", "Failed to update metrics");
+            }
+
             emit StateLog(params.executionId, "ProfitValidation", "Profitable");
         } else {
             // If testMode == false, revert on negative or zero profit
             if (!params.testMode) {
                 emit StateLog(params.executionId, "ProfitValidation", "NoProfit");
-                revert TradeErrors(7, "");
+                revert InsufficientProfit();
             }
             emit StateLog(params.executionId, "ProfitValidation", "TestMode");
         }
@@ -598,11 +1020,11 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         emit ArbitrageExecuted(
             params.sourceToken,
             params.targetToken,
-            params.amount,               // Trade input amount
-            finalAccountBalance,         // Total account balance
-            tradeFinalBalance,           // Trade-specific final balance
-            tradeProfit,                 // Trade-specific profit
-            expectedProfit,              // Expected profit from quotes
+            params.amount,                   // Trade input amount
+            finalAccountBalance,             // Total account balance
+            tradeFinalBalance,               // Trade-specific final balance (can be negative)
+            tradeProfit,                     // Trade-specific profit (can be negative)
+            expectedProfit,                  // Expected profit from quotes (can be negative)
             params.testMode
         );
 
@@ -655,6 +1077,65 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice Converts an address to a hex string
+     * @param addr The address to convert
+     * @return str The string representation of the address
+     */
+    function addressToString(address addr) internal pure returns (string memory) {
+        bytes memory addressBytes = abi.encodePacked(addr);
+        bytes memory stringBytes = new bytes(42);
+
+        // Add "0x" prefix
+        stringBytes[0] = '0';
+        stringBytes[1] = 'x';
+
+        // Convert each byte to its hex representation
+        for(uint i = 0; i < 20; i++) {
+            uint8 value = uint8(addressBytes[i]);
+            stringBytes[2+i*2] = toHexChar(value / 16);
+            stringBytes[2+i*2+1] = toHexChar(value % 16);
+        }
+
+        return string(stringBytes);
+    }
+
+    /**
+     * @notice Converts an int256 to a string representation with improved safety
+     * @param value The int256 value to convert
+     * @return str The string representation of the value
+     */
+    function int2str(int256 value) internal pure returns (string memory) {
+        if (value == 0) return "0";
+
+        bool negative = value < 0;
+
+        // Handle the edge case of minimum int256 value
+        if (value == type(int256).min) {
+            // Return a hardcoded string for this special case
+            return "-57896044618658097711785492504343953926634992332820282019728792003956564819968";
+        }
+
+        // Convert to absolute value for processing
+        uint256 absValue;
+        if (negative) {
+            // Safe conversion - already checked for MIN_INT256
+            absValue = uint256(-value);
+        } else {
+            absValue = uint256(value);
+        }
+
+        // Convert the absolute value to string using uint2str
+        string memory absStr = uint2str(absValue);
+
+        // Add negative sign if needed
+        if (negative) {
+            return string(abi.encodePacked("-", absStr));
+        } else {
+            return absStr;
+        }
+    }
+
+    /**
      * @notice Get trade context data for analysis
      * @param executionId The ID of the execution
      * @return tradeInputAmount The amount used for the trade
@@ -669,7 +1150,7 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
         uint256 tradeInputAmount,
         int256 tradeFinalBalance,
         int256 expectedFirstOutput,
-        int256 actualFirstOutput,
+        uint256 actualFirstOutput,
         int256 expectedSecondOutput,
         int256 actualSecondOutput,
         bool executed
@@ -680,8 +1161,8 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
             context.tradeFinalBalance,
             context.expectedFirstLegOutput,
             context.actualFirstLegOutput,
-            context.expectedSecondLegOutput,
-            context.actualSecondLegOutput,
+            context.expectedSecondOutput,
+            context.actualSecondOutput,
             context.executed
         );
     }
@@ -767,7 +1248,8 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
     ) {
         totalTrades = metrics.totalExecutions;
         successfulTrades = metrics.successfulExecutions;
-        failedTrades = metrics.failedExecutions;
+        failedTrades = metrics.totalExecutions > metrics.successfulExecutions ?
+            metrics.totalExecutions - metrics.successfulExecutions : 0;
         successRate = totalTrades > 0 ? (successfulTrades * 10000) / totalTrades : 0;
         cumulativeProfit = metrics.totalProfit;
         return (totalTrades, successfulTrades, failedTrades, successRate, cumulativeProfit);
@@ -776,13 +1258,13 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
     /**
      * @notice Verify flash loan configuration
      * @return vault The Balancer Vault address
-     * @return currentFeeBps The current fee in basis points (0 for Balancer)
+     * @return currentFeeBps The current fee in basis points
      */
     function verifyFlashLoanConfiguration() external view returns (
         address vault,
         uint256 currentFeeBps
     ) {
-        return (balancerVaultAddress, 0); // Balancer has no fees
+        return (address(balancerVault), 0); // Balancer has no fees
     }
 
     /**
@@ -889,9 +1371,9 @@ contract CrossDexArbitrageWithFlashLoan is Ownable, ReentrancyGuard, Pausable {
     /**
      * @notice Convert uint to string - utility function
      * @param _i The uint to convert
-     * @return str The string representation of the uint
+     * @return The string representation of the uint
      */
-    function uint2str(uint256 _i) public pure returns (string memory str) {
+    function uint2str(uint256 _i) public pure returns (string memory) {
         if (_i == 0) return "0";
 
         uint256 temp = _i;

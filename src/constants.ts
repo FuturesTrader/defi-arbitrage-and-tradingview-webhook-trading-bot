@@ -65,7 +65,7 @@ export const NETWORK_GAS_OPTIMIZATION = {
             HIGH: Number(parseUnits('5', 9))
         },
         MAX_GAS_IN_GWEI: 3,
-        NATIVE_PRICE_IN_USDC: 17, // AVAX price fallback
+        NATIVE_PRICE_IN_USDC: 28, // AVAX price fallback
         ESTIMATED_GAS_LIMIT: 300000n,
         GAS_LIMIT_BUFFER: 1.3,
         BASE_GAS: 2000000n,
@@ -132,7 +132,7 @@ export const ARBITRAGE_SETTINGS = {
     ON_CHAIN_TEST_MODE: false,
     OFF_CHAIN_TEST_MODE: false,
     FLASH_LOANS_ENABLED: true,
-    TEST_FLASH_LOANS: false,
+    TEST_FLASH_LOANS: false, // set to false to read trade amount in export const NETWORK_TRADE_SETTINGS. true will test 1 USDC
     FLASH_LOAN_THRESHOLD: 0.00001,
     MIN_FLASH_LOAN_PROFIT_PERCENT: 0.00001,
     TIME_SYNC_CHECK_INTERVAL: 1000,
@@ -484,7 +484,7 @@ export const NETWORK_TRADE_DIRECTIONS = {
  */
 export const NETWORK_TRADE_SETTINGS = {
     AVALANCHE: {
-        TRADE_SIZE: '10',
+        TRADE_SIZE: '100',
         SAFETY_MARGIN: 1,
         MAX_PRICE_IMPACT: 15.0,
         PRICE_CHECK_INTERVAL: 1000,
@@ -494,7 +494,7 @@ export const NETWORK_TRADE_SETTINGS = {
         DIRECTIONS: NETWORK_TRADE_DIRECTIONS.AVALANCHE,
     },
     ARBITRUM: {
-        TRADE_SIZE: '10',
+        TRADE_SIZE: '100',
         SAFETY_MARGIN: 1,
         MAX_PRICE_IMPACT: 10.0, // Lower for L2 efficiency
         PRICE_CHECK_INTERVAL: 500, // Faster for L2

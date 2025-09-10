@@ -1,29 +1,33 @@
 {
-  "totalTransactions": 4,
-  "successCount": 4,
+  "totalTransactions": 8,
+  "successCount": 8,
   "failureCount": 0,
   "successRate": 1,
-  "testModeCount": 4,
+  "testModeCount": 8,
   "routeDistribution": {
-    "uniswap-to-traderjoe": 4,
+    "uniswap-to-traderjoe": 8,
     "traderjoe-to-uniswap": 0,
     "unknown": 0
   },
   "tokenPairDistribution": {
-    "USDC-WAVAX": 2,
-    "USDC-WBTC": 2,
+    "USDC-WAVAX": 4,
+    "USDC-WBTC": 4,
     "unknown": 0
   },
   "dexAccuracy": {
     "uniswap": {
       "firstLeg": {
-        "count": 4,
+        "count": 8,
         "average": 0,
         "median": 0,
         "stdDev": 0,
         "min": 0,
         "max": 0,
         "data": [
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -57,13 +61,17 @@
         "confidence": "low"
       },
       "secondLeg": {
-        "count": 4,
+        "count": 8,
         "average": 0,
         "median": 0,
         "stdDev": 0,
         "min": 0,
         "max": 0,
         "data": [
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -77,13 +85,15 @@
   "wavaxDexAccuracy": {
     "uniswap": {
       "firstLeg": {
-        "count": 2,
+        "count": 4,
         "average": 0,
         "median": 0,
         "stdDev": 0,
         "min": 0,
         "max": 0,
         "data": [
+          0,
+          0,
           0,
           0
         ],
@@ -115,13 +125,15 @@
         "confidence": "low"
       },
       "secondLeg": {
-        "count": 2,
+        "count": 4,
         "average": 0,
         "median": 0,
         "stdDev": 0,
         "min": 0,
         "max": 0,
         "data": [
+          0,
+          0,
           0,
           0
         ],
@@ -133,13 +145,15 @@
   "wbtcDexAccuracy": {
     "uniswap": {
       "firstLeg": {
-        "count": 2,
+        "count": 4,
         "average": 0,
         "median": 0,
         "stdDev": 0,
         "min": 0,
         "max": 0,
         "data": [
+          0,
+          0,
           0,
           0
         ],
@@ -171,13 +185,15 @@
         "confidence": "low"
       },
       "secondLeg": {
-        "count": 2,
+        "count": 4,
         "average": 0,
         "median": 0,
         "stdDev": 0,
         "min": 0,
         "max": 0,
         "data": [
+          0,
+          0,
           0,
           0
         ],
@@ -188,12 +204,12 @@
   },
   "profitMetrics": {
     "USDC": {
-      "totalProfit": "-0.016982",
-      "averageProfit": "-0.004245",
-      "medianProfit": "-0.004314",
-      "profitPredictionAccuracy": 0.2808266333828443,
+      "totalProfit": "-0.026594",
+      "averageProfit": "-0.003324",
+      "medianProfit": "-0.002532",
+      "profitPredictionAccuracy": 0.22005052190816837,
       "profitableTradeCount": 0,
-      "unprofitableTradeCount": 4
+      "unprofitableTradeCount": 8
     }
   },
   "suggestedAdjustmentFactors": {
@@ -201,7 +217,7 @@
       "firstLeg": {
         "factor": 1,
         "confidence": "low",
-        "sampleSize": 4
+        "sampleSize": 8
       },
       "secondLeg": {
         "factor": 1,
@@ -218,7 +234,7 @@
       "secondLeg": {
         "factor": 1,
         "confidence": "low",
-        "sampleSize": 4
+        "sampleSize": 8
       }
     }
   },
@@ -228,7 +244,7 @@
         "firstLeg": {
           "factor": 1,
           "confidence": "low",
-          "sampleSize": 2
+          "sampleSize": 4
         },
         "secondLeg": {
           "factor": 1,
@@ -245,7 +261,7 @@
         "secondLeg": {
           "factor": 1,
           "confidence": "low",
-          "sampleSize": 2
+          "sampleSize": 4
         }
       }
     },
@@ -254,7 +270,7 @@
         "firstLeg": {
           "factor": 1,
           "confidence": "low",
-          "sampleSize": 2
+          "sampleSize": 4
         },
         "secondLeg": {
           "factor": 1,
@@ -271,7 +287,7 @@
         "secondLeg": {
           "factor": 1,
           "confidence": "low",
-          "sampleSize": 2
+          "sampleSize": 4
         }
       }
     }
@@ -286,7 +302,7 @@
         "accuracyJoeSecond": 0
       },
       "medium": {
-        "count": 4,
+        "count": 8,
         "accuracyUniFirst": 0,
         "accuracyJoeFirst": 0,
         "accuracyUniSecond": 0,
@@ -302,14 +318,14 @@
     },
     "byTokenPair": {
       "USDC-WAVAX": {
-        "count": 2,
+        "count": 4,
         "accuracyUniFirst": 0,
         "accuracyJoeFirst": 0,
         "accuracyUniSecond": 0,
         "accuracyJoeSecond": 0
       },
       "USDC-WBTC": {
-        "count": 2,
+        "count": 4,
         "accuracyUniFirst": 0,
         "accuracyJoeFirst": 0,
         "accuracyUniSecond": 0,
@@ -328,7 +344,7 @@
         }
       },
       "unprofitable": {
-        "count": 4,
+        "count": 8,
         "avgAccuracy": 0,
         "adjustmentFactors": {
           "uniswapFirst": 1,
@@ -345,6 +361,11 @@
         "timeRange": "2025-05-10T00:00",
         "count": 4,
         "averageAccuracy": 0
+      },
+      {
+        "timeRange": "2025-09-10T19:00",
+        "count": 4,
+        "averageAccuracy": 0
       }
     ],
     "adjustmentFactorTrend": [
@@ -354,26 +375,33 @@
         "uniswapSecondLeg": 1,
         "traderjoeFirstLeg": 1,
         "traderjoeSecondLeg": 1
+      },
+      {
+        "timeRange": "2025-09-10T19:00",
+        "uniswapFirstLeg": 1,
+        "uniswapSecondLeg": 1,
+        "traderjoeFirstLeg": 1,
+        "traderjoeSecondLeg": 1
       }
     ]
   },
   "timeRange": {
     "first": "2025-05-10T00:11:55.000Z",
-    "last": "2025-05-10T00:12:42.000Z"
+    "last": "2025-09-10T19:59:40.000Z"
   },
   "flashLoanMetrics": {
-    "count": 4,
-    "successCount": 4,
+    "count": 8,
+    "successCount": 8,
     "failureCount": 0,
     "successRate": 1,
-    "totalGrossProfit": "-0.016982",
+    "totalGrossProfit": "-0.026594",
     "totalFees": "0.000000",
-    "totalNetProfit": "-0.016982",
-    "averageNetProfit": "-0.004246",
+    "totalNetProfit": "-0.026594",
+    "averageNetProfit": "-0.003324",
     "feeBps": 0
   },
   "executionTypes": {
-    "flashLoan": 4,
+    "flashLoan": 8,
     "regular": 0
   }
 }

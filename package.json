@@ -20,6 +20,7 @@
     "mainUniswap": "tsx -r tsconfig-paths/register src/mainUniswap.ts",
     "testProvider": "tsx -r tsconfig-paths/register src/testProvider.ts",
     "mainJoe": "tsx -r tsconfig-paths/register src/mainJoe.ts",
+
     "mainArb": "tsx -r tsconfig-paths/register src/mainArbitrage.ts",
     "approveToken": "tsx -r tsconfig-paths/register src/approveTokens.ts",
     "testPoolArb": "tsx -r tsconfig-paths/register src/testPoolArb.ts",
@@ -37,13 +38,16 @@
     "decodeTransaction": "tsx -r tsconfig-paths/register scripts/decodeTransaction.ts",
     "traceTransaction": "tsx -r tsconfig-paths/register src/traceTransaction.ts",
     "printTraderJoeQuote": "tsx -r tsconfig-paths/register scripts/testSingleSwap.ts traderjoe USDCtoWAVAX 1 first --debug",
+
     "emergencyWithdrawUSDC": "tsx -r tsconfig-paths/register scripts/emergencyWithdraw.ts USDC",
     "emergencyWithdrawWAVAX": "tsx -r tsconfig-paths/register scripts/emergencyWithdraw.ts WAVAX",
     "emergencyWithdrawWBTC": "tsx -r tsconfig-paths/register scripts/emergencyWithdraw.ts WBTC",
+
     "testArbitrageFlashLoan1": "tsx -r tsconfig-paths/register scripts/testFlashLoanArbitrage.ts traderjoe-to-uniswap 1 wavax",
     "testArbitrageFlashLoan2": "tsx -r tsconfig-paths/register scripts/testFlashLoanArbitrage.ts uniswap-to-traderjoe 1 wavax",
     "testArbitrageFlashLoan3": "tsx -r tsconfig-paths/register scripts/testFlashLoanArbitrage.ts traderjoe-to-uniswap 1 wbtc",
     "testArbitrageFlashLoan4": "tsx -r tsconfig-paths/register scripts/testFlashLoanArbitrage.ts uniswap-to-traderjoe 1 wbtc",
+
     "wavaxPrice": "tsx -r tsconfig-paths/register src/wavaxPriceQuoter.ts",
     "runDataCollection": "tsx -r tsconfig-paths/register src/runDataCollection",
     "analyzeData": "tsx -r tsconfig-paths/register src/analyzeQuoteAccuracy.ts --data-dir=./trade_data/raw_trades --output=./analysis_results --csv --json",

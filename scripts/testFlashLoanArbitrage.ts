@@ -32,7 +32,7 @@ const FLASH_LOAN_POOL = ADDRESSES.BALANCER_V2.POOL;
 // Parse command line arguments with enhanced options
 const args = {
     path: process.argv[2] || 'uniswap-to-traderjoe', // must be 'uniswap-to-traderjoe' or 'traderjoe-to-uniswap'
-    amount: process.argv[3] || '1', // test amount in USDC
+    amount: process.argv[3] || '1', // test trade amount in USDC
     // New parameter for token pair, with default to WAVAX
     tokenPair: (process.argv[4] || 'wavax').toLowerCase(), // 'wavax' or 'wbtc'
     debug: process.argv.includes('--debug'),

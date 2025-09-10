@@ -1,8 +1,8 @@
 // ========================================================
 // QUOTE ADJUSTMENT FACTORS FOR TRADER JOE
 // ========================================================
-// Generated based on statistical analysis of 4 transactions
-// Date: 2025-05-10T01:59:10.616Z
+// Generated based on statistical analysis of 8 transactions
+// Date: 2025-09-10T20:00:44.954Z
 // 
 // WAVAX Adjustment Factors:
 // ------------------------
@@ -12,7 +12,7 @@
 //
 // Second Leg (WAVAX->USDC): 1.0000
 //    - Confidence: low
-//    - Sample size: 2
+//    - Sample size: 4
 //
 // WBTC Adjustment Factors:
 // -----------------------
@@ -22,7 +22,7 @@
 //
 // Second Leg (WBTC->USDC): 1.0000
 //    - Confidence: low
-//    - Sample size: 2
+//    - Sample size: 4
 //
 // Combined Factors (for backward compatibility):
 // --------------------------------------------
